@@ -10,31 +10,30 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-Sparta_tvconvAudioProcessor::Sparta_tvconvAudioProcessor()
-#ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
-#endif
+PluginProcessor::PluginProcessor() :
+    AudioProcessor(BusesProperties()
+                   .withInput("Input", AudioChannelSet::discreteChannels(64), true)
+                   .withOutput("Output", AudioChannelSet::discreteChannels(64), true))
 {
+    nSampleRate = 48000;
+    nHostBlockSize = -1;
+    tvconv_create(&hTVCnv);
+    refreshWindow = true;
 }
 
-Sparta_tvconvAudioProcessor::~Sparta_tvconvAudioProcessor()
+PluginProcessor::~PluginProcessor()
 {
+    tvconv_destroy(&hTVCnv);
 }
 
 //==============================================================================
-const juce::String Sparta_tvconvAudioProcessor::getName() const
+
+const juce::String PluginProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool Sparta_tvconvAudioProcessor::acceptsMidi() const
+bool PluginProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -43,7 +42,7 @@ bool Sparta_tvconvAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool Sparta_tvconvAudioProcessor::producesMidi() const
+bool PluginProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -52,7 +51,7 @@ bool Sparta_tvconvAudioProcessor::producesMidi() const
    #endif
 }
 
-bool Sparta_tvconvAudioProcessor::isMidiEffect() const
+bool PluginProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -61,50 +60,105 @@ bool Sparta_tvconvAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double Sparta_tvconvAudioProcessor::getTailLengthSeconds() const
+double PluginProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int Sparta_tvconvAudioProcessor::getNumPrograms()
+int PluginProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int Sparta_tvconvAudioProcessor::getCurrentProgram()
+int PluginProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void Sparta_tvconvAudioProcessor::setCurrentProgram (int index)
+void PluginProcessor::setCurrentProgram (int /*index*/)
 {
 }
 
-const juce::String Sparta_tvconvAudioProcessor::getProgramName (int index)
+const juce::String PluginProcessor::getProgramName (int /*index*/)
 {
     return {};
 }
 
-void Sparta_tvconvAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void PluginProcessor::changeProgramName (int /*index*/, const juce::String& /*newName*/)
 {
 }
 
 //==============================================================================
-void Sparta_tvconvAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+int PluginProcessor::getNumParameters()
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    return k_NumOfParameters;
 }
 
-void Sparta_tvconvAudioProcessor::releaseResources()
+float PluginProcessor::getParameter(int index)
+{
+    if (index < 3) {
+        if (tvconv_getMaxDimension(hTVCnv, index) > tvconv_getMinDimension(hTVCnv, index)){
+            return (tvconv_getPosition(hTVCnv, index)-tvconv_getMinDimension(hTVCnv, index))/
+                (tvconv_getMaxDimension(hTVCnv, index)-tvconv_getMinDimension(hTVCnv, index));
+        }
+    }
+    return 0.0f;
+}
+
+const String PluginProcessor::getParameterName (int index)
+{
+    switch (index) {
+        case k_receiverCoordX: return "receiver_coordinate_x";
+        case k_receiverCoordY: return "receiver_coordinate_y";
+        case k_receiverCoordZ: return "receiver_coordinate_z";
+        default: return "NULL";
+    }
+}
+
+const String PluginProcessor::getParameterText(int index)
+{
+    if (index < 3) {
+        return String(tvconv_getPosition(hTVCnv, index));
+    }
+    else return "NULL";
+}
+
+void PluginProcessor::setParameter (int index, float newValue)
+{
+    float newValueScaled;
+    if (index < 3) {
+        newValueScaled = newValue *
+        (tvconv_getMaxDimension(hTVCnv, index) - tvconv_getMinDimension(hTVCnv, index)) +
+        tvconv_getMinDimension(hTVCnv, index);
+        if (newValueScaled != tvconv_getPosition(hTVCnv, index)){
+            tvconv_setPosition(hTVCnv, index, newValueScaled);
+            refreshWindow = true;
+        }
+    }
+}
+
+//==============================================================================
+void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    nHostBlockSize = samplesPerBlock;
+    nNumInputs =  getTotalNumInputChannels();
+    nNumOutputs = getTotalNumOutputChannels();
+    nSampleRate = (int)(sampleRate + 0.5);
+    //isPlaying = false;
+
+    tvconv_init(hTVCnv, nSampleRate, nHostBlockSize);
+    AudioProcessor::setLatencySamples(tvconv_getProcessingDelay(hTVCnv));
+}
+
+void PluginProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool Sparta_tvconvAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -127,63 +181,79 @@ bool Sparta_tvconvAudioProcessor::isBusesLayoutSupported (const BusesLayout& lay
 }
 #endif
 
-void Sparta_tvconvAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /*midiMessages*/)
 {
-    juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    int nCurrentBlockSize = nHostBlockSize = buffer.getNumSamples();
+    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels());
+    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels());
+    float** bufferData = buffer.getArrayOfWritePointers();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
+    tvconv_process(hTVCnv, bufferData, bufferData, nNumInputs, nNumOutputs, nCurrentBlockSize);
 }
 
 //==============================================================================
-bool Sparta_tvconvAudioProcessor::hasEditor() const
+bool PluginProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* Sparta_tvconvAudioProcessor::createEditor()
+juce::AudioProcessorEditor* PluginProcessor::createEditor()
 {
-    return new Sparta_tvconvAudioProcessorEditor (*this);
+    return new PluginEditor (this);
 }
 
 //==============================================================================
-void Sparta_tvconvAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    /* Create an outer XML element.. */
+    XmlElement xml("TVCONVAUDIOPLUGINSETTINGS");
+    xml.setAttribute("LastSofaFilePath", tvconv_getSofaFilePath(hTVCnv));
+    xml.setAttribute("ReceiverX", tvconv_getPosition(hTVCnv, 0));
+    xml.setAttribute("ReceiverY", tvconv_getPosition(hTVCnv, 1));
+    xml.setAttribute("ReceiverZ", tvconv_getPosition(hTVCnv, 2));
+    copyXmlToBinary(xml, destData);
 }
 
-void Sparta_tvconvAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    /* This getXmlFromBinary() function retrieves XML from the binary blob */
+        std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+        if (xmlState != nullptr) {
+            /* make sure that it's actually the correct XML object */
+            if (xmlState->hasTagName("TVCONVAUDIOPLUGINSETTINGS")) {
+     
+                if(xmlState->hasAttribute("LastSofaFilePath")){
+                    String directory = xmlState->getStringAttribute("LastSofaFilePath", "no_file");
+                    const char* new_cstring = (const char*)directory.toUTF8();
+                    tvconv_setSofaFilePath(hTVCnv, new_cstring);
+                }
+                if (xmlState->hasAttribute("ReceiverX")){
+                    tvconv_setPosition(hTVCnv, 0,
+                        (float)xmlState->getDoubleAttribute("ReceiverX"));
+                }
+                if (xmlState->hasAttribute("ReceiverY")){
+                    tvconv_setPosition(hTVCnv, 1,
+                        (float)xmlState->getDoubleAttribute("ReceiverY"));
+                }
+                if (xmlState->hasAttribute("ReceiverZ")){
+                    tvconv_setPosition(hTVCnv, 2,
+                        (float)xmlState->getDoubleAttribute("ReceiverZ"));
+                }
+                
+                tvconv_refreshParams(hTVCnv);
+            }
+        }
 }
 
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new Sparta_tvconvAudioProcessor();
+    return new PluginProcessor();
 }
