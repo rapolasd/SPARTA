@@ -240,8 +240,10 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     hA2sh = hVst->getFXHandle();
 
     /* init OpenGL */
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     openGLContext.setMultisamplingEnabled(true);
     openGLContext.attachTo(*this);
+#endif
 
     /* Look and Feel */
     LAF.setDefaultColours();
@@ -356,6 +358,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     presetCB->addItem (TRANS("Sound-field SPS200"), MICROPHONE_ARRAY_PRESET_SOUND_FIELD_SPS200);
     presetCB->addItem (TRANS("Zylia 1D"), MICROPHONE_ARRAY_PRESET_ZYLIA_1D);
     presetCB->addItem (TRANS("Eigenmike32"), MICROPHONE_ARRAY_PRESET_EIGENMIKE32);
+    presetCB->addItem (TRANS("Eigenmike64"), MICROPHONE_ARRAY_PRESET_EIGENMIKE64);
     presetCB->addItem (TRANS("DTU mic"), MICROPHONE_ARRAY_PRESET_DTU_MIC );
     presetCB->addItem (TRANS("Aalto Hydro"), MICROPHONE_ARRAY_PRESET_AALTO_HYDROPHONE);
 
@@ -1302,27 +1305,34 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == tb_loadJSON.get())
     {
         //[UserButtonCode_tb_loadJSON] -- add your button handler code here..
-        FileChooser myChooser ("Load configuration...",
-                               hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
-                               "*.json");
-        if (myChooser.browseForFileToOpen()) {
-            File configFile (myChooser.getResult());
-            hVst->setLastDir(configFile.getParentDirectory());
-            hVst->loadConfiguration (configFile);
-        }
+        chooser = std::make_unique<juce::FileChooser> ("Load configuration...",
+                                                       hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
+                                                       "*.json");
+        auto chooserFlags = juce::FileBrowserComponent::openMode
+                                  | juce::FileBrowserComponent::canSelectFiles;
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != File{}){
+                hVst->setLastDir(file.getParentDirectory());
+                hVst->loadConfiguration (file);
+            }
+        });
         //[/UserButtonCode_tb_loadJSON]
     }
     else if (buttonThatWasClicked == tb_saveJSON.get())
     {
         //[UserButtonCode_tb_saveJSON] -- add your button handler code here..
-        FileChooser myChooser ("Save configuration...",
-                               hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
-                               "*.json");
-        if (myChooser.browseForFileToSave (true)) {
-            File configFile (myChooser.getResult());
-            hVst->setLastDir(configFile.getParentDirectory());
-            hVst->saveConfigurationToFile (configFile);
-        }
+        chooser = std::make_unique<juce::FileChooser> ("Save configuration...",
+                                                       hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
+                                                       "*.json");
+        auto chooserFlags = juce::FileBrowserComponent::saveMode;
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != File{}) {
+                hVst->setLastDir(file.getParentDirectory());
+                hVst->saveConfigurationToFile (file);
+            }
+        });
         //[/UserButtonCode_tb_saveJSON]
     }
     else if (buttonThatWasClicked == applyDiffEQ.get())

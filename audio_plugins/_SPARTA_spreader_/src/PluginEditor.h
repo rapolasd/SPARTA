@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.8
+  Created with Projucer version: 6.1.2
 
   ------------------------------------------------------------------------------
 
@@ -79,8 +79,10 @@ private:
     PluginProcessor* hVst;
     void* hSpr;
     void timerCallback(int timerID) override;
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
     double progress = 0.0;
     ProgressBar progressbar;
 
@@ -110,6 +112,7 @@ private:
     /* tooltips */
     SharedResourcePointer<TooltipWindow> tipWindow;
     std::unique_ptr<juce::ComboBox> pluginDescription; /* Dummy combo box to provide plugin description tooltip */
+    HyperlinkButton publicationLink { "(Related Publication)", { "https://leomccormack.github.io/sparta-site/docs/help/related-publications/mccormack2021rendering.pdf" } };
 
     //[/UserVariables]
 

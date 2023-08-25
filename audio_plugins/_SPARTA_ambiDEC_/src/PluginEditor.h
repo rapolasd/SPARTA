@@ -30,6 +30,7 @@
 
 typedef enum _SPARTA_WARNINGS{
     k_warning_none,
+    k_warning_frameSize,
     k_warning_supported_fs,
     k_warning_mismatch_fs,
     k_warning_NinputCH,
@@ -79,8 +80,10 @@ private:
     PluginProcessor* hVst;
     void* hAmbi;
     void timerCallback(int timerID) override;
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
     double progress = 0.0;
     ProgressBar progressbar;
 
@@ -94,6 +97,9 @@ private:
     std::unique_ptr<Viewport> outputCoordsVP;
     outputCoordsView* outputCoordsView_handle;
     FilenameComponent fileChooser;
+
+    /* json file loading/saving */
+    std::unique_ptr<juce::FileChooser> chooser;
 
     /* sofa file loading */
     void filenameComponentChanged (FilenameComponent*) override  {

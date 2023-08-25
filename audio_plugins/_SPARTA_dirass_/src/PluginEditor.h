@@ -88,8 +88,10 @@ private:
     SPARTALookAndFeel LAF;
 
     /* for openGL speed-ups */
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
 
     /* for the powermap overlay */
     Rectangle<int> previewArea;
@@ -113,7 +115,7 @@ private:
     /* tooltips */
     SharedResourcePointer<TooltipWindow> tipWindow;
     std::unique_ptr<juce::ComboBox> pluginDescription; /* Dummy combo box to provide plugin description tooltip */
-    HyperlinkButton publicationLink { "(Related Publication)", { "http://research.spa.aalto.fi/projects/sparta_vsts/publications/mccormack2019applications.pdf" } };
+    HyperlinkButton publicationLink { "(Related Publication)", { "https://leomccormack.github.io/sparta-site/docs/help/related-publications/mccormack2019applications.pdf" } };
 
     //[/UserVariables]
 

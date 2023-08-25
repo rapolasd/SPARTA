@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.8
+  Created with Projucer version: 6.1.2
 
   ------------------------------------------------------------------------------
 
@@ -146,8 +146,10 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     hSpr = hVst->getFXHandle();
 
     /* init OpenGL */
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     openGLContext.setMultisamplingEnabled(true);
     openGLContext.attachTo(*this);
+#endif
 
     /* Look and Feel */
     LAF.setDefaultColours();
@@ -217,6 +219,10 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     pluginDescription->setAlpha(0.0f);
     pluginDescription->setEnabled(false);
     pluginDescription->setTooltip(TRANS("An arbitrary array panner with coherent and incoherent spreading options. Basically, any array (up to 64 channel) that can be desribed based on a number of impulse response (IR) measurements and loaded as a SOFA file can be used (e.g. HRIRs, or microphone array IRs).\n"));
+    addAndMakeVisible (publicationLink);
+    publicationLink.setColour (HyperlinkButton::textColourId, Colours::lightblue);
+    publicationLink.setBounds(getBounds().getWidth()-80, 4, 80, 12);
+    publicationLink.setJustificationType(Justification::centredLeft);
 
 	/* Specify screen refresh rate */
     startTimer(TIMER_GUI_RELATED, 40);

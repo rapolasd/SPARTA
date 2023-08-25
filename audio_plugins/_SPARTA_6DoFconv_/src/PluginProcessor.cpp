@@ -12,21 +12,97 @@
 //==============================================================================
 PluginProcessor::PluginProcessor() :
     AudioProcessor(BusesProperties()
-                   .withInput("Input", AudioChannelSet::discreteChannels(64), true)
-                   .withOutput("Output", AudioChannelSet::discreteChannels(64), true))
+        .withInput("Input", AudioChannelSet::discreteChannels(64), true)
+        .withOutput("Output", AudioChannelSet::discreteChannels(64), true))
 {
     nSampleRate = 48000;
     nHostBlockSize = -1;
     tvconv_create(&hTVCnv);
+    
+    // (@todo) to be automated
+    enable_rotation = true;
+    
+    rotator_create(&hRot);
+
+    // (@todo) needs to be made adaptive 
+    rotator_setOrder(hRot, 4);
+
     refreshWindow = true;
+
+    /* specify here on which UDP port number to receive incoming OSC messages */
+    osc_port_ID = DEFAULT_OSC_PORT;
+    osc_connected = osc.connect(osc_port_ID);
+    /* tell the component to listen for OSC messages */
+    osc.addListener(this);
+
+    if (osc_connected)
+    {
+        DBG("osc connected");
+    }
+    else
+    {
+        DBG("osc not connected");
+    }
+    
 }
 
 PluginProcessor::~PluginProcessor()
 {
+    osc.disconnect();
+    osc.removeListener(this);
     tvconv_destroy(&hTVCnv);
 }
 
 //==============================================================================
+
+
+void PluginProcessor::oscMessageReceived(const OSCMessage& message)
+{
+    if (message.size() == 3 && message.getAddressPattern().toString().compare("xyz")) {
+        if (message[0].isFloat32())
+            setParameterRaw(0, message[0].getFloat32());
+        if (message[1].isFloat32())
+            setParameterRaw(1, message[1].getFloat32());
+        if (message[2].isFloat32())
+            setParameterRaw(2, message[2].getFloat32());
+        return;
+    }
+    
+    else if (message.size() == 7 && message.getAddressPattern().toString().compare("xyzquat")) {
+        if (message[0].isFloat32())
+            setParameterRaw(0, message[0].getFloat32());
+        if (message[1].isFloat32())
+            setParameterRaw(1, message[1].getFloat32());
+        if (message[2].isFloat32())
+            setParameterRaw(2, message[2].getFloat32());
+        if (message[3].isFloat32())
+            rotator_setQuaternionW(hRot, message[3].getFloat32());
+        if (message[4].isFloat32())
+            rotator_setQuaternionX(hRot, message[4].getFloat32());
+        if (message[5].isFloat32())
+            rotator_setQuaternionY(hRot, message[5].getFloat32());
+        if (message[6].isFloat32())
+            rotator_setQuaternionY(hRot, message[6].getFloat32());
+        return;
+    }
+
+    else if (message.size() == 6 && message.getAddressPattern().toString().compare("xyzypr")) {
+        if (message[0].isFloat32())
+            setParameterRaw(0, message[0].getFloat32());
+        if (message[1].isFloat32())
+            setParameterRaw(1, message[1].getFloat32());
+        if (message[2].isFloat32())
+            setParameterRaw(2, message[2].getFloat32());
+        if (message[3].isFloat32())
+            rotator_setYaw(hRot, message[3].getFloat32());
+        if (message[4].isFloat32())
+            rotator_setPitch(hRot, message[4].getFloat32());
+        if (message[5].isFloat32())
+            rotator_setRoll(hRot, message[5].getFloat32());
+
+        return;
+    }
+}
 
 const juce::String PluginProcessor::getName() const
 {
@@ -99,7 +175,7 @@ float PluginProcessor::getParameter(int index)
 {
     if (index < 3) {
         if (tvconv_getMaxDimension(hTVCnv, index) > tvconv_getMinDimension(hTVCnv, index)){
-            return (tvconv_getPosition(hTVCnv, index)-tvconv_getMinDimension(hTVCnv, index))/
+            return (tvconv_getTargetPosition(hTVCnv, index)-tvconv_getMinDimension(hTVCnv, index))/
                 (tvconv_getMaxDimension(hTVCnv, index)-tvconv_getMinDimension(hTVCnv, index));
         }
     }
@@ -119,20 +195,31 @@ const String PluginProcessor::getParameterName (int index)
 const String PluginProcessor::getParameterText(int index)
 {
     if (index < 3) {
-        return String(tvconv_getPosition(hTVCnv, index));
+        return String(tvconv_getTargetPosition(hTVCnv, index));
     }
     else return "NULL";
 }
 
 void PluginProcessor::setParameter (int index, float newValue)
 {
+    DBG("param set");
     float newValueScaled;
     if (index < 3) {
         newValueScaled = newValue *
         (tvconv_getMaxDimension(hTVCnv, index) - tvconv_getMinDimension(hTVCnv, index)) +
         tvconv_getMinDimension(hTVCnv, index);
-        if (newValueScaled != tvconv_getPosition(hTVCnv, index)){
-            tvconv_setPosition(hTVCnv, index, newValueScaled);
+        if (newValueScaled != tvconv_getTargetPosition(hTVCnv, index)){
+            tvconv_setTargetPosition(hTVCnv, newValueScaled, index);
+            refreshWindow = true;
+        }
+    }
+}
+
+void PluginProcessor::setParameterRaw(int index, float newValue)
+{
+    if (index < 3) {
+        if (newValue != tvconv_getTargetPosition(hTVCnv, index)) {
+            tvconv_setTargetPosition(hTVCnv, newValue, index);
             refreshWindow = true;
         }
     }
@@ -141,6 +228,7 @@ void PluginProcessor::setParameter (int index, float newValue)
 //==============================================================================
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+
     nHostBlockSize = samplesPerBlock;
     nNumInputs =  getTotalNumInputChannels();
     nNumOutputs = getTotalNumOutputChannels();
@@ -148,7 +236,20 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     //isPlaying = false;
 
     tvconv_init(hTVCnv, nSampleRate, nHostBlockSize);
+
+    int numConvolverOutputChannels = tvconv_getNumOutputChannels(hTVCnv);
+
+    if (numConvolverOutputChannels) {
+        
+        int sh_order = sqrt(numConvolverOutputChannels) - 1;
+        
+        DBG("order");
+        DBG(String(sh_order));
+        rotator_setOrder(hRot, sh_order);
+    }
+
     AudioProcessor::setLatencySamples(tvconv_getProcessingDelay(hTVCnv));
+    rotator_init(hRot, (float)sampleRate);
 }
 
 void PluginProcessor::releaseResources()
@@ -189,6 +290,24 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     float** bufferData = buffer.getArrayOfWritePointers();
 
     tvconv_process(hTVCnv, bufferData, bufferData, nNumInputs, nNumOutputs, nCurrentBlockSize);
+
+    if (enable_rotation) {
+        float* pFrameData[MAX_NUM_CHANNELS];
+        int frameSize = rotator_getFrameSize();
+
+        if ((nCurrentBlockSize % frameSize == 0)) { /* divisible by frame size */
+            for (int frame = 0; frame < nCurrentBlockSize / frameSize; frame++) {
+                for (int ch = 0; ch < buffer.getNumChannels(); ch++)
+                    pFrameData[ch] = &bufferData[ch][frame * frameSize];
+
+                /* perform processing */
+                rotator_process(hRot, pFrameData, pFrameData, nNumOutputs, nNumOutputs, frameSize);
+            }
+        }
+        else
+            buffer.clear();
+    }
+
 }
 
 //==============================================================================
@@ -211,9 +330,12 @@ void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
     /* Create an outer XML element.. */
     XmlElement xml("TVCONVAUDIOPLUGINSETTINGS");
     xml.setAttribute("LastSofaFilePath", tvconv_getSofaFilePath(hTVCnv));
-    xml.setAttribute("ReceiverX", tvconv_getPosition(hTVCnv, 0));
-    xml.setAttribute("ReceiverY", tvconv_getPosition(hTVCnv, 1));
-    xml.setAttribute("ReceiverZ", tvconv_getPosition(hTVCnv, 2));
+    xml.setAttribute("ReceiverX", tvconv_getTargetPosition(hTVCnv, 0));
+    xml.setAttribute("ReceiverY", tvconv_getTargetPosition(hTVCnv, 1));
+    xml.setAttribute("ReceiverZ", tvconv_getTargetPosition(hTVCnv, 2));
+
+    xml.setAttribute("OSC_PORT", osc_port_ID);
+
     copyXmlToBinary(xml, destData);
 }
 
@@ -234,16 +356,25 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
                     tvconv_setSofaFilePath(hTVCnv, new_cstring);
                 }
                 if (xmlState->hasAttribute("ReceiverX")){
-                    tvconv_setPosition(hTVCnv, 0,
-                        (float)xmlState->getDoubleAttribute("ReceiverX"));
+                    tvconv_setTargetPosition(hTVCnv,
+                        (float)xmlState->getDoubleAttribute("ReceiverX"), 0);
                 }
                 if (xmlState->hasAttribute("ReceiverY")){
-                    tvconv_setPosition(hTVCnv, 1,
-                        (float)xmlState->getDoubleAttribute("ReceiverY"));
+                    tvconv_setTargetPosition(hTVCnv,
+                        (float)xmlState->getDoubleAttribute("ReceiverY"), 1);
                 }
                 if (xmlState->hasAttribute("ReceiverZ")){
-                    tvconv_setPosition(hTVCnv, 2,
-                        (float)xmlState->getDoubleAttribute("ReceiverZ"));
+                    tvconv_setTargetPosition(hTVCnv,
+                        (float)xmlState->getDoubleAttribute("ReceiverZ"), 2);
+                }
+
+                if (xmlState->hasAttribute("OSC_PORT")) {
+                    osc_port_ID = xmlState->getIntAttribute("OSC_PORT", DEFAULT_OSC_PORT);
+                    osc.connect(osc_port_ID);
+                }
+
+                if (xmlState->hasAttribute("TBRotFlag")) {
+                    DBG("flag set");
                 }
                 
                 tvconv_refreshParams(hTVCnv);

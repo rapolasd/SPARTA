@@ -10,8 +10,9 @@
 
 #include <JuceHeader.h>
 #include "tvconv.h"
+#include "rotator.h"
 #include <string.h>
-#define BUILD_VER_SUFFIX "beta" /* String to be added before the version name on the GUI (beta, alpha etc..) */
+#define BUILD_VER_SUFFIX "alpha" /* String to be added before the version name on the GUI (beta, alpha etc..) */
 #ifndef MIN
 # define MIN(a,b) (( (a) < (b) ) ? (a) : (b))
 #endif
@@ -19,26 +20,37 @@
 # define MAX(a,b) (( (a) > (b) ) ? (a) : (b))
 #endif
 
+#define DEFAULT_OSC_PORT 9000
+
 enum {
     /* For the default VST GUI */
     k_receiverCoordX,
     k_receiverCoordY,
     k_receiverCoordZ,
 
-    k_NumOfParameters
+    k_NumOfParameters,
+
+    k_qw,
+    k_qx,
+    k_qy,
+    k_qz
 };
 //==============================================================================
 /**
 */
 class PluginProcessor  : public AudioProcessor,
+                         private OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
                          public VSTCallbackHandler
 {
 public:
     /* Set/Get functions */
     void* getFXHandle() { return hTVCnv; }
+    void* getFXHandle_rot() { return hRot; }
     int getCurrentBlockSize(){ return nHostBlockSize; }
     int getCurrentNumInputs(){ return nNumInputs; }
     int getCurrentNumOutputs(){ return nNumOutputs; }
+    void setEnableRotation(bool newState){ enable_rotation = newState; }
+    bool getEnableRotation(){ return enable_rotation; }
     
     /* For refreshing window during automation */
     bool refreshWindow;
@@ -54,14 +66,29 @@ public:
             return 1;
         return 0;
     }
+
+    /* OSC */
+    void oscMessageReceived(const OSCMessage& message) override;
+    void setOscPortID(int newID) {
+        osc.disconnect();
+        osc_port_ID = newID;
+        osc_connected = osc.connect(osc_port_ID);
+    }
+    int getOscPortID() { return osc_port_ID; }
+    bool getOscPortConnected() { return osc_connected; }
     
     
 private:
     void* hTVCnv;         /* tvconv handle */
+    void* hRot;           /* rotator handle */
     int nNumInputs;       /* current number of input channels */
     int nNumOutputs;      /* current number of output channels */
     int nSampleRate;      /* current host sample rate */
     int nHostBlockSize;   /* typical host block size to expect, in samples */
+    OSCReceiver osc;
+    bool osc_connected;
+    int osc_port_ID;
+    bool enable_rotation;
     
     
 /***************************************************************************\
@@ -107,6 +134,7 @@ public:
     const String getParameterName (int index) override;
     const String getParameterText (int index) override;
     void setParameter (int index, float newValue) override;
+    void setParameterRaw(int index, float newValue);
 
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;

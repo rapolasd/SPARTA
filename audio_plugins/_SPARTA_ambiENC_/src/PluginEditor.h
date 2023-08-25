@@ -74,8 +74,10 @@ private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     PluginProcessor* hVst;
     void* hAmbi;
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
 
     /* Look and Feel */
     SPARTALookAndFeel LAF;
@@ -87,6 +89,9 @@ private:
     /* panning window */
     std::unique_ptr<pannerView> panWindow;
     bool refreshPanViewWindow;
+
+    /* json file loading/saving */
+    std::unique_ptr<juce::FileChooser> chooser;
 
     /* warnings */
     SPARTA_WARNINGS currentWarning;

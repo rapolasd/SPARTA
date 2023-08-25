@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.8
+  Created with Projucer version: 6.1.6
 
   ------------------------------------------------------------------------------
 
@@ -80,8 +80,10 @@ private:
     PluginProcessor* hVst;
     void* hBin;
     void timerCallback(int timerID) override;
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
     double progress = 0.0;
     ProgressBar progressbar;
 
@@ -92,6 +94,9 @@ private:
     std::unique_ptr<Viewport> sourceCoordsVP;
     inputCoordsView* sourceCoordsView_handle;
     FilenameComponent fileChooser;
+
+    /* json file loading/saving */
+    std::unique_ptr<juce::FileChooser> chooser;
 
     /* sofa file loading */
     void filenameComponentChanged (FilenameComponent*) override  {

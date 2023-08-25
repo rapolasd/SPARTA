@@ -17,9 +17,11 @@ This repository contains the following VST plug-ins:
 * **Array2SH** - A microphone array spatial encoder (up to 7th order), with presets for several commercially available A-format and higher-order microphone arrays. The plug-in can also present objective evaluation metrics for the currently selected configuration.
 * **Beamformer** - A spherical harmonic domain beamforming plug-in with multiple beamforming strategies (up to 64 output beams).  
 * **Binauraliser** - A binaural panner (up to 64 input channels) with a built-in SOFA loader and head-tracking support via OSC messages.
+* **BinauraliserNF** - Binauraliser, with the addition of proximity filtering for near field sound sources.
 * **DirASS** - A sound-field visualiser based on re-assigning the energy of beamformers. This re-assignment is based on DoA estimates extracted from "spatially-constrained" regions, which are centred around each beamformer look-direction. 
 * **MatrixConv** - A basic matrix convolver with an optional partitioned convolution mode. The user need only specify the number of inputs and load the filters via a wav file.
 * **MultiConv** - A basic multi-channel convolver with an optional partitioned convolution mode. Unlike "MatrixConv", this plug-in does not perform any matrixing. Instead, each input channel is convolved with the respective filter; i.e. numInputs = numFilters = numOutputs.
+* **6DoFconv** - A time-varying partitioned convolution multi-channel convolver for SOFA files containing RIRs with multiple listener positions.
 * **Panner** - A frequency-dependent 3-D panner using the VBAP method (up to 64 inputs and outputs).
 * **PitchShifter** - A very basic multi-channel pitch shifter, based on the phase-vocoder approach.
 * **PowerMap** - A sound-field visualisation plug-in based on Ambisonic signals as input (up to 7th order), with PWD/MVDR/MUSIC/Min-Norm options.
@@ -29,7 +31,9 @@ This repository contains the following VST plug-ins:
 
 ## Pre-built plug-ins
 
-[The plug-in suite may be downloaded from here](http://research.spa.aalto.fi/projects/sparta_vsts/) [Mac OSX (10.10 or higher), Linux (x86_64), and Windows (64-bit)].
+[![Github All Releases](https://img.shields.io/github/downloads/leomccormack/SPARTA/total.svg)]()
+
+[The plug-in suite may be downloaded from here](https://github.com/leomccormack/SPARTA/releases/latest) [Mac OSX (10.10 or higher), Linux (x86_64), and Windows (x86_64)].
 
 ## Building the plug-ins yourself
 
@@ -48,18 +52,16 @@ The [VST2_SDK](https://web.archive.org/web/20181016150224/https://download.stein
 SDKs/VST2_SDK
 ```
 
-**MacOSX, Linux and Windows (x86_64/amd64)** users must install a custom Intel MKL library. Detailed instructions on how to do this can be found [here](https://github.com/leomccormack/Spatial_Audio_Framework/blob/master/docs/PERFORMANCE_LIBRARY_INSTRUCTIONS.md). 
-
-**Raspberry Pi (ARM)** users instead require OpenBLAS and LAPACKE libraries:
+By default, **MacOSX, Linux and Windows (x86_64/amd64)** users need to install [Intel oneAPI](https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html) (MKL and IPP) and run the **install-safmkl**.sh/.bat and **install-safipp**.sh/.bat scripts found in SDKs/Spatial_Audio_Framework/scripts. Whereas, **Raspberry Pi (ARM)** users instead require OpenBLAS and LAPACKE libraries:
 ``` 
 sudo apt-get install liblapack3 liblapack-dev libopenblas-base libopenblas-dev liblapacke-dev
 ```
+Note, however, that alternative performance libraries may also be used, with more information provided [here](https://github.com/leomccormack/Spatial_Audio_Framework/blob/master/docs/PERFORMANCE_LIBRARY_INSTRUCTIONS.md).
 
-**Linux (x86_64/amd64 and ARM)** users must also install the following libraries (the former line for JUCE, and the latter line for the Spatial_Audio_Framework):
+**Linux (x86_64/amd64 and ARM)** users must also install the following libraries required by JUCE:
 
 ```
 sudo apt-get install x11proto-xinerama-dev libwebkit2gtk-4.0-dev libgtk-3-dev x11proto-xext-dev libcurl4-openssl-dev libasound2-dev
-sudo apt-get install libhdf5-dev libnetcdf-dev libnetcdff-dev
 ```
 
 ## Building the plug-ins via CMake 

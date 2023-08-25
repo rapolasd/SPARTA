@@ -85,8 +85,10 @@ private:
     PluginProcessor* hVst;
     void* hA2sh;
     void timerCallback(int timerID) override;
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     std::unique_ptr<OpenGLGraphicsContextCustomShader> shader;
     OpenGLContext openGLContext;
+#endif
     double progress = 0.0;
     ProgressBar progressbar;
 
@@ -104,13 +106,16 @@ private:
     bool needScreenRefreshFLAG;
     bool showDegreesInstead;
 
+    /* json file loading/saving */
+    std::unique_ptr<juce::FileChooser> chooser;
+
     /* warnings */
     SPARTA_WARNINGS currentWarning;
 
     /* tooltips */
     SharedResourcePointer<TooltipWindow> tipWindow;
     std::unique_ptr<juce::ComboBox> pluginDescription; /* Dummy combo box to provide plugin description tooltip */
-    HyperlinkButton publicationLink { "(Related Publication)", { "http://research.spa.aalto.fi/projects/sparta_vsts/publications/mccormack2018real.pdf" } };
+    HyperlinkButton publicationLink { "(Related Publication)", { "https://leomccormack.github.io/sparta-site/docs/help/related-publications/mccormack2018real.pdf" } };
 
     //[/UserVariables]
 

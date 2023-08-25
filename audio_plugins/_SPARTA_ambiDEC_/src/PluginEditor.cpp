@@ -230,8 +230,10 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     hAmbi = hVst->getFXHandle();
 
     /* init OpenGL */
+#ifndef PLUGIN_EDITOR_DISABLE_OPENGL
     openGLContext.setMultisamplingEnabled(true);
     openGLContext.attachTo(*this);
+#endif
 
     /* Look and Feel */
     LAF.setDefaultColours();
@@ -346,7 +348,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     SL_num_loudspeakers->setValue(ambi_dec_getNumLoudspeakers(hAmbi),dontSendNotification);
     CBchFormat->setSelectedId(ambi_dec_getChOrder(hAmbi), dontSendNotification);
     CBnormScheme->setSelectedId(ambi_dec_getNormType(hAmbi), dontSendNotification);
-    s_decOrder->setRange(1, ambi_dec_getMasterDecOrder(hAmbi), 1);
+    s_decOrder->setRange(1, ambi_dec_getMasterDecOrder(hAmbi)+0.0001f, 1);
     s_decOrder->setValue(ambi_dec_getDecOrderAllBands(hAmbi), dontSendNotification);
     TBBinauraliseLS->setToggleState(ambi_dec_getBinauraliseLSflag(hAmbi), dontSendNotification);
     CBdec1method->setSelectedId(ambi_dec_getDecMethod(hAmbi, 0), dontSendNotification);
@@ -981,6 +983,11 @@ void PluginEditor::paint (juce::Graphics& g)
     switch (currentWarning){
         case k_warning_none:
             break;
+        case k_warning_frameSize:
+            g.drawText(TRANS("Set frame size to multiple of ") + String(ambi_dec_getFrameSize()),
+                       getBounds().getWidth()-225, 16, 530, 11,
+                       Justification::centredLeft, true);
+            break;
         case k_warning_supported_fs:
             g.drawText(TRANS("Sample rate (") + String(ambi_dec_getDAWsamplerate(hAmbi)) + TRANS(") is unsupported"),
                        getBounds().getWidth()-225, 16, 530, 11,
@@ -1150,27 +1157,34 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == tb_loadJSON.get())
     {
         //[UserButtonCode_tb_loadJSON] -- add your button handler code here..
-        FileChooser myChooser ("Load configuration...",
-                               hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
-                               "*.json");
-        if (myChooser.browseForFileToOpen()) {
-            File configFile (myChooser.getResult());
-            hVst->setLastDir(configFile.getParentDirectory());
-            hVst->loadConfiguration (configFile);
-        }
+        chooser = std::make_unique<juce::FileChooser> ("Load configuration...",
+                                                       hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
+                                                       "*.json");
+        auto chooserFlags = juce::FileBrowserComponent::openMode
+                                  | juce::FileBrowserComponent::canSelectFiles;
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != File{}){
+                hVst->setLastDir(file.getParentDirectory());
+                hVst->loadConfiguration (file);
+            }
+        });
         //[/UserButtonCode_tb_loadJSON]
     }
     else if (buttonThatWasClicked == tb_saveJSON.get())
     {
         //[UserButtonCode_tb_saveJSON] -- add your button handler code here..
-        FileChooser myChooser ("Save configuration...",
-                               hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
-                               "*.json");
-        if (myChooser.browseForFileToSave (true)) {
-            File configFile (myChooser.getResult());
-            hVst->setLastDir(configFile.getParentDirectory());
-            hVst->saveConfigurationToFile (configFile);
-        }
+        chooser = std::make_unique<juce::FileChooser> ("Save configuration...",
+                                                       hVst->getLastDir().exists() ? hVst->getLastDir() : File::getSpecialLocation (File::userHomeDirectory),
+                                                       "*.json");
+        auto chooserFlags = juce::FileBrowserComponent::saveMode;
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != File{}) {
+                hVst->setLastDir(file.getParentDirectory());
+                hVst->saveConfigurationToFile (file);
+            }
+        });
         //[/UserButtonCode_tb_saveJSON]
     }
     else if (buttonThatWasClicked == TBenablePreProc.get())
@@ -1296,7 +1310,11 @@ void PluginEditor::timerCallback(int timerID)
             }
 
             /* display warning message, if needed */
-            if ( !((ambi_dec_getDAWsamplerate(hAmbi) == 44.1e3) || (ambi_dec_getDAWsamplerate(hAmbi) == 48e3)) ){
+            if ((hVst->getCurrentBlockSize() % ambi_dec_getFrameSize()) != 0){
+                currentWarning = k_warning_frameSize;
+                repaint(0,0,getWidth(),32);
+            }
+            else if ( !((ambi_dec_getDAWsamplerate(hAmbi) == 44.1e3) || (ambi_dec_getDAWsamplerate(hAmbi) == 48e3)) ){
                 currentWarning = k_warning_supported_fs;
                 repaint(0,0,getWidth(),32);
             }
