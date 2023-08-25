@@ -338,8 +338,12 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     fileChooser.setBounds (718, 89, 180, 20);
     StringArray filenames;
     filenames.add(binauraliser_getSofaFilePath(hBin));
-    fileChooser.setRecentlyUsedFilenames(filenames);
+    if (binauraliser_getUseDefaultHRIRsflag(hBin))
+        fileChooser.setRecentlyUsedFilenames(filenames);
+    else
+        fileChooser.setCurrentFile(File(filenames[0]), true, dontSendNotification);
     fileChooser.setFilenameIsEditable(true);
+    
 
     /* grab current parameter settings */
     TBuseDefaultHRIRs->setToggleState(binauraliser_getUseDefaultHRIRsflag(hBin), dontSendNotification);
