@@ -1111,6 +1111,7 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     {
         //[UserButtonCode_TBuseDefaultHRIRs] -- add your button handler code here..
         binauraliser_setUseDefaultHRIRsflag(hBin, (int)TBuseDefaultHRIRs->getToggleState());
+        fileChooser.setCurrentFile(File(), false, dontSendNotification);
         refreshPanViewWindow = true;
         //[/UserButtonCode_TBuseDefaultHRIRs]
     }
@@ -1234,6 +1235,23 @@ void PluginEditor::timerCallback(int timerID)
                 s_pitch->setValue(binauraliser_getPitch(hBin), dontSendNotification);
             if(binauraliser_getRoll(hBin)!=s_roll->getValue())
                 s_roll->setValue(binauraliser_getRoll(hBin), dontSendNotification);
+            if(binauraliser_getEnableRotation(hBin)!=TBenableRotation->getToggleState())
+                TBenableRotation->setToggleState(binauraliser_getEnableRotation(hBin), dontSendNotification);
+            if(binauraliser_getRPYflag(hBin)!=TBrpyFlag->getToggleState())
+                TBrpyFlag->setToggleState(binauraliser_getRPYflag(hBin), dontSendNotification);
+            if(binauraliser_getFlipYaw(hBin)!=t_flipYaw->getToggleState())
+                t_flipYaw->setToggleState(binauraliser_getFlipYaw(hBin), dontSendNotification);
+            if(binauraliser_getFlipPitch(hBin)!=t_flipPitch->getToggleState())
+                t_flipPitch->setToggleState(binauraliser_getFlipPitch(hBin), dontSendNotification);
+            if(binauraliser_getFlipRoll(hBin)!=t_flipRoll->getToggleState())
+                t_flipRoll->setToggleState(binauraliser_getFlipRoll(hBin), dontSendNotification);
+            if(!binauraliser_getUseDefaultHRIRsflag(hBin))
+            {
+                if(fileChooser.getCurrentFile().getFullPathName().compare(binauraliser_getSofaFilePath(hBin))!=0)
+                    fileChooser.setCurrentFile(File(binauraliser_getSofaFilePath(hBin)), true, dontSendNotification);
+            }
+            else if (fileChooser.getCurrentFile() != File())
+                    fileChooser.setCurrentFile(File(), false, dontSendNotification);
 
             /* Progress bar */
             if(binauraliser_getCodecStatus(hBin)==CODEC_STATUS_INITIALISING){

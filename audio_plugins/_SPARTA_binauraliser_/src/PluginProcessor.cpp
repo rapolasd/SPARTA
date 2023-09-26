@@ -37,6 +37,7 @@ PluginProcessor::PluginProcessor() :
     osc.addListener(this);
     refreshWindow = true;
     startTimer(TIMER_PROCESSING_RELATED, 80);
+    sofaChooserOn = false;
 }
 
 PluginProcessor::~PluginProcessor()
@@ -83,6 +84,8 @@ void PluginProcessor::setParameter (int index, float newValue)
             case k_flipPitch:       binauraliser_setFlipPitch(hBin, (int)(newValue + 0.5f)); break;
             case k_flipRoll:        binauraliser_setFlipRoll(hBin, (int)(newValue + 0.5f)); break;
             case k_numInputs:       binauraliser_setNumSources(hBin, (int)(newValue*(float)(MAX_NUM_INPUTS)+0.5)); break;
+            case k_selectSofa:      if(!sofaChooserOn) openSofaFileChooser(); break;
+            case k_useDefaultHRIRs: binauraliser_setUseDefaultHRIRsflag(hBin, (int)(newValue + 0.5f)); break;
         }
     }
     /* source direction parameters */
@@ -124,6 +127,8 @@ float PluginProcessor::getParameter (int index)
             case k_flipPitch:       return (float)binauraliser_getFlipPitch(hBin);
             case k_flipRoll:        return (float)binauraliser_getFlipRoll(hBin);
             case k_numInputs:       return (float)(binauraliser_getNumSources(hBin))/(float)(MAX_NUM_INPUTS);
+            case k_selectSofa:      return sofaChooserOn ? 1.0f : 0.0f;
+            case k_useDefaultHRIRs: return (float)binauraliser_getUseDefaultHRIRsflag(hBin);
             default: return 0.0f;
         }
     }
@@ -161,6 +166,8 @@ const String PluginProcessor::getParameterName (int index)
             case k_flipPitch:       return "flip_pitch";
             case k_flipRoll:        return "flip_roll";
             case k_numInputs:       return "num_sources";
+            case k_selectSofa:      return "select_sofa";
+            case k_useDefaultHRIRs: return "use_default_HRIR";
             default: return "NULL";
         }
     }
@@ -188,6 +195,8 @@ const String PluginProcessor::getParameterText(int index)
             case k_flipPitch:       return !binauraliser_getFlipPitch(hBin) ? "No-Flip" : "Flip";
             case k_flipRoll:        return !binauraliser_getFlipRoll(hBin) ? "No-Flip" : "Flip";
             case k_numInputs:       return String(binauraliser_getNumSources(hBin));
+            case k_selectSofa:      return !sofaChooserOn ? "Off" : "On";
+            case k_useDefaultHRIRs: return !binauraliser_getUseDefaultHRIRsflag(hBin) ? "Off" : "On";
             default: return "NULL";
         }
     }
@@ -402,6 +411,28 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
             binauraliser_refreshSettings(hBin);
         }
     }
+}
+
+void PluginProcessor::openSofaFileChooser()
+{
+    sofaChooserOn = true;
+    chooser = std::make_unique<FileChooser> (TRANS ("Choose a new file"),
+                                             lastDir,
+                                             "*.sofa;*.nc;");
+
+    auto chooserFlags = FileBrowserComponent::canSelectFiles | FileBrowserComponent::openMode;
+
+    chooser->launchAsync (chooserFlags, [this] (const FileChooser&)
+    {
+        sofaChooserOn = false;
+        if (chooser->getResult() == File{})
+            return;
+
+        String directory = chooser->getResult().getFullPathName();
+        const char* new_cstring = (const char*)directory.toUTF8();
+        binauraliser_setSofaFilePath(hBin, new_cstring);
+    });
+    
 }
 
 //==============================================================================

@@ -52,6 +52,8 @@ enum {
     k_flipPitch,
     k_flipRoll,
     k_numInputs,
+    k_selectSofa,
+    k_useDefaultHRIRs,
     
     k_NumOfParameters
 };
@@ -99,6 +101,8 @@ public:
     int getOscPortID(){ return osc_port_ID; }
     bool getOscPortConnected(){ return osc_connected; }
     
+    void openSofaFileChooser();
+    
 private:
     void* hBin;           /* binauraliser handle */
     int nNumInputs;       /* current number of input channels */
@@ -110,6 +114,8 @@ private:
     OSCReceiver osc;
     bool osc_connected;
     int osc_port_ID;
+    std::unique_ptr<FileChooser> chooser;
+    bool sofaChooserOn;
     
     void timerCallback(int timerID) override
     {
