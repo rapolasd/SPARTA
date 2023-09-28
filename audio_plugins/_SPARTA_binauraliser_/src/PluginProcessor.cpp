@@ -416,8 +416,12 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 void PluginProcessor::openSofaFileChooser()
 {
     sofaChooserOn = true;
+    File directory = strcmp(binauraliser_getSofaFilePath(hBin), "no_file") == 0 ?
+                        File::getSpecialLocation (File::userHomeDirectory) :
+                        File(binauraliser_getSofaFilePath(hBin));
+
     chooser = std::make_unique<FileChooser> (TRANS ("Choose a new file"),
-                                             lastDir,
+                                             directory,
                                              "*.sofa;*.nc;");
 
     auto chooserFlags = FileBrowserComponent::canSelectFiles | FileBrowserComponent::openMode;

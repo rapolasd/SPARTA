@@ -27,7 +27,7 @@
 #include "ambi_bin.h"
 #include <string.h>
 #include <thread>
-#define BUILD_VER_SUFFIX "" /* String to be added before the version name on the GUI (e.g. beta, alpha etc..) */
+#define BUILD_VER_SUFFIX "beta" /* String to be added before the version name on the GUI (e.g. beta, alpha etc..) */
 #define DEFAULT_OSC_PORT 9000
 
 typedef enum _TIMERS{
@@ -51,6 +51,8 @@ enum {
     k_flipYaw,
     k_flipPitch,
     k_flipRoll,
+    k_selectSofa,
+    k_useDefaultHRIRs,
     
 	k_NumOfParameters
 };
@@ -87,6 +89,8 @@ public:
     int getOscPortID(){ return osc_port_ID; }
     bool getOscPortConnected(){ return osc_connected; }
     
+    void openSofaFileChooser();
+    
 private:
     void* hAmbi;             /* ambi_bin handle */
     int nNumInputs;          /* current number of input channels */
@@ -96,6 +100,8 @@ private:
     OSCReceiver osc;         /* OSC receiver object */
     bool osc_connected;      /* flag. 0: not connected, 1: connect to "osc_port_ID"  */
     int osc_port_ID;         /* port ID */
+    std::unique_ptr<FileChooser> chooser;
+    bool sofaChooserOn;
     
     void timerCallback(int timerID) override {
         switch(timerID){

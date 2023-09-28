@@ -308,6 +308,13 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (fileChooser);
     fileChooser.addListener (this);
     fileChooser.setBounds (452, 86, 181, 20);
+    StringArray filenames;
+    filenames.add(ambi_bin_getSofaFilePath(hAmbi));
+    if (ambi_bin_getUseDefaultHRIRsflag(hAmbi))
+        fileChooser.setRecentlyUsedFilenames(filenames);
+    else
+        fileChooser.setCurrentFile(File(filenames[0]), true, dontSendNotification);
+    fileChooser.setFilenameIsEditable(true);
 
     /* ProgressBar */
     progress = 0.0;
@@ -1029,6 +1036,7 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     {
         //[UserButtonCode_TBuseDefaultHRIRs] -- add your button handler code here..
         ambi_bin_setUseDefaultHRIRsflag(hAmbi, (int)TBuseDefaultHRIRs->getToggleState());
+        fileChooser.setCurrentFile(File(), false, dontSendNotification);
         //[/UserButtonCode_TBuseDefaultHRIRs]
     }
     else if (buttonThatWasClicked == TBmaxRE.get())
@@ -1190,8 +1198,32 @@ void PluginEditor::timerCallback(int timerID)
             label_DAW_fs->setText(String(ambi_bin_getDAWsamplerate(hAmbi)), dontSendNotification);
             CBchFormat->setItemEnabled(CH_FUMA, ambi_bin_getInputOrderPreset(hAmbi)==SH_ORDER_FIRST ? true : false);
             CBnormScheme->setItemEnabled(NORM_FUMA, ambi_bin_getInputOrderPreset(hAmbi)==SH_ORDER_FIRST ? true : false);
-
-
+            if(CBorderPreset->getSelectedId() != ambi_bin_getInputOrderPreset(hAmbi))
+                CBorderPreset->setSelectedId(ambi_bin_getInputOrderPreset(hAmbi), dontSendNotification);
+            if(CBdecoderMethod->getSelectedId() != ambi_bin_getDecodingMethod(hAmbi))
+                CBdecoderMethod->setSelectedId(ambi_bin_getDecodingMethod(hAmbi), dontSendNotification);
+            if(!ambi_bin_getUseDefaultHRIRsflag(hAmbi))
+            {
+                if(fileChooser.getCurrentFile().getFullPathName().compare(ambi_bin_getSofaFilePath(hAmbi))!=0)
+                    fileChooser.setCurrentFile(File(ambi_bin_getSofaFilePath(hAmbi)), true, dontSendNotification);
+            }
+            else if (fileChooser.getCurrentFile() != File())
+                    fileChooser.setCurrentFile(File(), false, dontSendNotification);
+            if(TBdiffMatching->getToggleState() != ambi_bin_getEnableDiffuseMatching(hAmbi))
+                TBdiffMatching->setToggleState(ambi_bin_getEnableDiffuseMatching(hAmbi), dontSendNotification);
+            if(TBmaxRE->getToggleState() != ambi_bin_getEnableMaxRE(hAmbi))
+                TBmaxRE->setToggleState(ambi_bin_getEnableMaxRE(hAmbi), dontSendNotification);
+            if(TBenableRot->getToggleState() != ambi_bin_getEnableRotation(hAmbi))
+                TBenableRot->setToggleState(ambi_bin_getEnableRotation(hAmbi), dontSendNotification);
+            if(TBrpyFlag->getToggleState() != ambi_bin_getRPYflag(hAmbi))
+                TBrpyFlag->setToggleState(ambi_bin_getRPYflag(hAmbi), dontSendNotification);
+            if(t_flipYaw->getToggleState() != ambi_bin_getFlipYaw(hAmbi))
+                t_flipYaw->setToggleState(ambi_bin_getFlipYaw(hAmbi), dontSendNotification);
+            if(t_flipPitch->getToggleState() != ambi_bin_getFlipPitch(hAmbi))
+                t_flipPitch->setToggleState(ambi_bin_getFlipPitch(hAmbi), dontSendNotification);
+            if(t_flipRoll->getToggleState() != ambi_bin_getFlipRoll(hAmbi))
+                t_flipRoll->setToggleState(ambi_bin_getFlipRoll(hAmbi), dontSendNotification);
+            
             /* Progress bar */
             if(ambi_bin_getCodecStatus(hAmbi)==CODEC_STATUS_INITIALISING){
                 addAndMakeVisible(progressbar);

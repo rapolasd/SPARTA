@@ -36,6 +36,7 @@ PluginProcessor::PluginProcessor() :
     osc.addListener(this);
     
     startTimer(TIMER_PROCESSING_RELATED, 40); 
+    sofaChooserOn = false;
 }
 
 PluginProcessor::~PluginProcessor()
@@ -85,6 +86,8 @@ void PluginProcessor::setParameter (int index, float newValue)
         case k_flipYaw:               ambi_bin_setFlipYaw(hAmbi, (int)(newValue + 0.5f));  break;
         case k_flipPitch:             ambi_bin_setFlipPitch(hAmbi, (int)(newValue + 0.5f)); break;
         case k_flipRoll:              ambi_bin_setFlipRoll(hAmbi, (int)(newValue + 0.5f)); break;
+        case k_selectSofa:            if(!sofaChooserOn) openSofaFileChooser(); break;
+        case k_useDefaultHRIRs:       ambi_bin_setUseDefaultHRIRsflag(hAmbi, (int)(newValue + 0.5f)); break;
          
         default: break;
     }
@@ -111,6 +114,8 @@ float PluginProcessor::getParameter (int index)
         case k_flipYaw:               return (float)ambi_bin_getFlipYaw(hAmbi);
         case k_flipPitch:             return (float)ambi_bin_getFlipPitch(hAmbi);
         case k_flipRoll:              return (float)ambi_bin_getFlipRoll(hAmbi);
+        case k_selectSofa:            return sofaChooserOn ? 1.0f : 0.0f;
+        case k_useDefaultHRIRs:       return (float)ambi_bin_getUseDefaultHRIRsflag(hAmbi);
         
         default: return 0.0f;
     }
@@ -143,6 +148,8 @@ const String PluginProcessor::getParameterName (int index)
         case k_flipYaw:               return "flip_yaw";
         case k_flipPitch:             return "flip_pitch";
         case k_flipRoll:              return "flip_roll";
+        case k_selectSofa:            return "select_sofa";
+        case k_useDefaultHRIRs:       return "use_default_HRIR";
        
         default: return "NULL";
     }
@@ -184,6 +191,8 @@ const String PluginProcessor::getParameterText(int index)
         case k_flipYaw:               return !ambi_bin_getFlipYaw(hAmbi) ? "No-Flip" : "Flip";
         case k_flipPitch:             return !ambi_bin_getFlipPitch(hAmbi) ? "No-Flip" : "Flip";
         case k_flipRoll:              return !ambi_bin_getFlipRoll(hAmbi) ? "No-Flip" : "Flip";
+        case k_selectSofa:            return !sofaChooserOn ? "Off" : "On";
+        case k_useDefaultHRIRs:       return !ambi_bin_getUseDefaultHRIRsflag(hAmbi) ? "Off" : "On";
             
         default: return "NULL";
     }
@@ -400,6 +409,32 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
             ambi_bin_refreshParams(hAmbi);
         }
     }
+}
+
+void PluginProcessor::openSofaFileChooser()
+{
+    sofaChooserOn = true;
+    File directory = strcmp(ambi_bin_getSofaFilePath(hAmbi), "no_file") == 0 ?
+                        File::getSpecialLocation (File::userHomeDirectory) :
+                        File(ambi_bin_getSofaFilePath(hAmbi));
+
+    chooser = std::make_unique<FileChooser> (TRANS ("Choose a new file"),
+                                             directory,
+                                             "*.sofa;*.nc;");
+
+    auto chooserFlags = FileBrowserComponent::canSelectFiles | FileBrowserComponent::openMode;
+
+    chooser->launchAsync (chooserFlags, [this] (const FileChooser&)
+    {
+        sofaChooserOn = false;
+        if (chooser->getResult() == File{})
+            return;
+
+        String directory = chooser->getResult().getFullPathName();
+        const char* new_cstring = (const char*)directory.toUTF8();
+        ambi_bin_setSofaFilePath(hAmbi, new_cstring);
+    });
+    
 }
 
 //==============================================================================
