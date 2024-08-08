@@ -24,8 +24,8 @@
 
 PluginProcessor::PluginProcessor() :
     AudioProcessor(BusesProperties()
-        .withInput("Input", AudioChannelSet::discreteChannels(64), true)
-        .withOutput("Output", AudioChannelSet::discreteChannels(2), true))
+        .withInput("Input", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true)
+        .withOutput("Output", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true))
 {
 	decorrelator_create(&hDecor);
     startTimer(TIMER_PROCESSING_RELATED, 40); 
@@ -39,8 +39,8 @@ PluginProcessor::~PluginProcessor()
 void PluginProcessor::setParameter (int index, float newValue)
 {
     switch (index) {
-        case k_nChannels:  decorrelator_setNumberOfChannels(hDecor, (int)(newValue*(float)(MAX_NUM_CHANNELS-1) + 1.5f));
-         
+        case k_nChannels:  decorrelator_setNumberOfChannels(hDecor, (int)(newValue*(float)(MAX_NUM_CHANNELS-1) + 1.5f)); break;
+        case k_decorrelation: decorrelator_setDecorrelationAmount(hDecor, newValue); break;
         default: break;
     }
 }
@@ -53,6 +53,7 @@ float PluginProcessor::getParameter (int index)
 {
     switch (index) {
         case k_nChannels:   return (float)(decorrelator_getNumberOfChannels(hDecor)-1)/(float)(MAX_NUM_CHANNELS-1);
+        case k_decorrelation: return decorrelator_getDecorrelationAmount(hDecor);
         default: return 0.0f;
     }
 }
@@ -71,6 +72,7 @@ const String PluginProcessor::getParameterName (int index)
 {
     switch (index) {
         case k_nChannels:            return "order";
+        case k_decorrelation:        return "decorrelation";
        
         default: return "NULL";
     }
@@ -80,6 +82,7 @@ const String PluginProcessor::getParameterText(int index)
 {
     switch (index) {
         case k_nChannels: return String(decorrelator_getNumberOfChannels(hDecor));
+        case k_decorrelation: return String(decorrelator_getDecorrelationAmount(hDecor));
         default: return "NULL";
     }
 }
@@ -160,8 +163,8 @@ void PluginProcessor::changeProgramName (int /*index*/, const String& /*newName*
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     nHostBlockSize = samplesPerBlock;
-    nNumInputs =  getTotalNumInputChannels();
-    nNumOutputs = getTotalNumOutputChannels();
+    nNumInputs =  jmin(getTotalNumInputChannels(), 256);
+    nNumOutputs = jmin(getTotalNumOutputChannels(), 256);
     nSampleRate = (int)(sampleRate + 0.5);
 
 	decorrelator_init(hDecor, nSampleRate);
@@ -175,15 +178,15 @@ void PluginProcessor::releaseResources()
 void PluginProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
 {
     int nCurrentBlockSize = nHostBlockSize = buffer.getNumSamples();
-    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels());
-    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels());
-    float** bufferData = buffer.getArrayOfWritePointers();
-    float* pFrameData[MAX_NUM_CHANNELS];
+    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels(), 256);
+    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels(), 256);
+    float* const* bufferData = buffer.getArrayOfWritePointers();
+    float* pFrameData[256];
     int frameSize = decorrelator_getFrameSize();
 
     if((nCurrentBlockSize % frameSize == 0)){ /* divisible by frame size */
         for (int frame = 0; frame < nCurrentBlockSize/frameSize; frame++) {
-            for (int ch = 0; ch < buffer.getNumChannels(); ch++)
+            for (int ch = 0; ch < jmin(buffer.getNumChannels(), 256); ch++)
                 pFrameData[ch] = &bufferData[ch][frame*frameSize];
 
             /* perform processing */

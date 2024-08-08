@@ -24,8 +24,8 @@
 
 PluginProcessor::PluginProcessor() : 
 	AudioProcessor(BusesProperties()
-		.withInput("Input", AudioChannelSet::discreteChannels(64), true)
-	    .withOutput("Output", AudioChannelSet::discreteChannels(64), true))
+		.withInput("Input", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true)
+	    .withOutput("Output", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true))
 {
     powermap_create(&hPm);
     isPlaying = false;
@@ -158,7 +158,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     nHostBlockSize = samplesPerBlock;
     nSampleRate = (int)(sampleRate + 0.5);
-    nNumInputs = getTotalNumInputChannels(); 
+    nNumInputs = getTotalNumInputChannels();
     isPlaying = false;
 
     powermap_init(hPm, nSampleRate);
@@ -173,7 +173,7 @@ void PluginProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& /*mid
 {
     int nCurrentBlockSize = buffer.getNumSamples();
     nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels());
-    float** bufferData = buffer.getArrayOfWritePointers();
+    float* const* bufferData = buffer.getArrayOfWritePointers();
 
     /* check whether the playhead is moving */
     playHead = getPlayHead();

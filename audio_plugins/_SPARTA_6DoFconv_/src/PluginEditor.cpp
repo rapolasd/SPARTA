@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.1.6
+  Created with Projucer version: 7.0.9
 
   ------------------------------------------------------------------------------
 
@@ -179,12 +179,12 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     te_oscport->setReturnKeyStartsNewLine (false);
     te_oscport->setReadOnly (false);
     te_oscport->setScrollbarsShown (true);
-    te_oscport->setCaretVisible (false);
+    te_oscport->setCaretVisible (true);
     te_oscport->setPopupMenuEnabled (true);
     te_oscport->setColour (juce::TextEditor::textColourId, juce::Colours::white);
     te_oscport->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00ffffff));
     te_oscport->setColour (juce::TextEditor::outlineColourId, juce::Colour (0x6c838080));
-    te_oscport->setText (TRANS("9000"));
+    te_oscport->setText (TRANS ("9000"));
 
     te_oscport->setBounds (344, 296, 42, 22);
 
@@ -193,7 +193,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     CBviewMode->setEditableText (false);
     CBviewMode->setJustificationType (juce::Justification::centredLeft);
     CBviewMode->setTextWhenNothingSelected (juce::String());
-    CBviewMode->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBviewMode->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBviewMode->addListener (this);
 
     CBviewMode->setBounds (755, 38, 92, 16);
@@ -269,7 +269,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     //[UserPreSize]
     //[/UserPreSize]
 
-    setSize (860, 500);
+    setSize (860, 502);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -300,24 +300,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     SL_source_y->setEnabled(false);
     SL_source_z->setEnabled(false);
 
-    /* file loader */
-    fileComp.reset (new FilenameComponent("fileComp", {},
-                                          true, false, false,
-                                          "*.sofa;*.nc;", {},
-                                          "Load SOFA File"));
-    addAndMakeVisible (fileComp.get());
-    fileComp->addListener(this);
-    fileComp->setBounds (16, 62, 380, 20);
-    if(strcmp(tvconv_getSofaFilePath(hTVC), "no_file") != 0){
-        fileComp->setCurrentFile(String(tvconv_getSofaFilePath(hTVC)), true, dontSendNotification);
-        refreshCoords();
-    } else {
-        SL_receiver_x->setEnabled(false);
-        SL_receiver_y->setEnabled(false);
-        SL_receiver_z->setEnabled(false);
-    }
 
-	/* fetch current configuration */
+	/* fetch current configuration *///////////////////////////////////////////////////////////////////////////////////
     te_oscport->setText(String(hVst->getOscPortID()), dontSendNotification);
     CBviewMode->addItem(TRANS("Top View"), TOP_VIEW+1); /* must start from 1... */
     CBviewMode->addItem(TRANS("Side View"), SIDE_VIEW+1);
@@ -330,15 +314,39 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     t_flipRoll->setToggleState((bool)rotator_getFlipRoll(hRot), dontSendNotification);
     TBenableRotation->setToggleState(hVst->getEnableRotation(), dontSendNotification);
 
-    /* create scene view window */
+
+    /* create SCENE VIEW window *//////////////////////////////////////////////////////////////////////////////////////
     sceneWindow.reset (new sceneView(ownerFilter, 440, 432));
     addAndMakeVisible (sceneWindow.get());
     sceneWindow->setViewMode(CBviewMode->getSelectedId()-1);
     sceneWindow->setBounds (408, 58, 440, 432);
     refreshSceneViewWindow = true;
 
-    /* tooltips */
-    TBenableRotation->setTooltip("Enable spherical harmonic/sound-field rotation. This is only applicable if you have loaded Ambisonic IRs, which are in the ACN channel ordering convention");
+
+    /* file loader *///////////////////////////////////////////////////////////////////////////////////////////////////
+    fileComp.reset(new FilenameComponent("fileComp", {},
+        true, false, false,
+        "*.sofa;*.nc;", {},
+        "Load SOFA File"));
+    addAndMakeVisible(fileComp.get());
+    fileComp->addListener(this);
+    fileComp->setBounds(16, 62, 380, 20);
+    if (strcmp(tvconv_getSofaFilePath(hTVC), "no_file") != 0) {
+        // string is different from "no_file" -> it's been selected a valid file
+        fileComp->setCurrentFile(String(tvconv_getSofaFilePath(hTVC)), true, dontSendNotification);
+        refreshCoords();
+        refreshSceneViewWindow = true;
+        sceneWindow->refreshSceneView();
+    }
+    else {
+        SL_receiver_x->setEnabled(false);
+        SL_receiver_y->setEnabled(false);
+        SL_receiver_z->setEnabled(false);
+    }
+
+
+    /* tooltips *//////////////////////////////////////////////////////////////////////////////////////////////////////
+    TBenableRotation->setTooltip("Enable spherical harmonic/sound-field rotation. This is only applicable if you have loaded Ambisonic IRs, which must be in the ACN channel ordering convention. (Note that the Ambisonics normalisation convention does not affect the rotations (i.e. it doesn't matter if the Ambisonic signals are N3D or SN3D, the rotations will be correct)).");
     s_yaw->setTooltip("Sets the 'Yaw' rotation angle (in degrees).");
     s_pitch->setTooltip("Sets the 'Pitch' rotation angle (in degrees).");
     s_roll->setTooltip("Sets the 'Roll' rotation angle (in degrees).");
@@ -346,7 +354,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     t_flipPitch->setTooltip("Flips the sign (+/-) of the 'Pitch' rotation angle.");
     t_flipRoll->setTooltip("Flips the sign (+/-) of the 'Roll' rotation angle.");
 
-    /* Plugin description */
+
+    /* Plugin description *////////////////////////////////////////////////////////////////////////////////////////////
     pluginDescription.reset (new juce::ComboBox ("new combo box"));
     addAndMakeVisible (pluginDescription.get());
     pluginDescription->setBounds (0, 0, 240, 32);
@@ -355,7 +364,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     pluginDescription->setTooltip(TRANS("Time-varying impulse response convolver. A set of IRs can be loaded from a sofa file, where IRs have to be assigned with different ListenerPositions. The position of the receiver can be varied during playback using the parameter sliders. The convolver finds the nearest neighbour IR of the selected position. It applies overlap-add partitioned convolution and cross-fades between previous and current positions to produce smooth transitions. Each IR can have up to 64 channels (7th order Ambisonics). Single fixed SourcePosition is assumed and only mono input is supported.\n"));
 
     /* Specify screen refresh rate */
-    startTimer(40); /*ms (40ms = 25 frames per second) */
+    startTimer(refreshInterval); /*ms (40ms = 25 frames per second) */
 
     /* warnings */
     currentWarning = k_warning_none;
@@ -422,7 +431,7 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 0, y = 316, width = 860, height = 186;
+        int x = 0, y = 316, width = 860, height = 188;
         juce::Colour fillColour1 = juce::Colour (0xff19313f), fillColour2 = juce::Colour (0xff041518);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -502,7 +511,7 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 408, y = 58, width = 440, height = 434;
+        int x = 408, y = 58, width = 440, height = 430;
         juce::Colour fillColour = juce::Colour (0x10f4f4f4);
         juce::Colour strokeColour = juce::Colour (0x67a0a0a0);
         //[UserPaintCustomArguments] Customize the painting arguments here..
@@ -560,7 +569,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 16, y = 1, width = 100, height = 32;
-        juce::String text (TRANS("SPARTA|"));
+        juce::String text (TRANS ("SPARTA|"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -572,7 +581,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 92, y = 1, width = 148, height = 32;
-        juce::String text (TRANS("6DoFconv"));
+        juce::String text (TRANS ("6DoFconv"));
         juce::Colour fillColour = juce::Colour (0xffff00f4);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -593,7 +602,7 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 0, y = 0, width = 2, height = 500;
+        int x = 0, y = 0, width = 2, height = 610;
         juce::Colour strokeColour = juce::Colour (0xffb9b9b9);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -603,7 +612,7 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 858, y = 0, width = 2, height = 500;
+        int x = 858, y = 0, width = 2, height = 610;
         juce::Colour strokeColour = juce::Colour (0xffb9b9b9);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -613,7 +622,7 @@ void PluginEditor::paint (juce::Graphics& g)
     }
 
     {
-        int x = 0, y = 498, width = 860, height = 2;
+        int x = 0, y = 500, width = 860, height = 2;
         juce::Colour strokeColour = juce::Colour (0xffb9b9b9);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -624,7 +633,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 86, width = 115, height = 30;
-        juce::String text (TRANS("Host Block Size:"));
+        juce::String text (TRANS ("Host Block Size:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -636,7 +645,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 210, y = 86, width = 200, height = 30;
-        juce::String text (TRANS("IR Length (s):"));
+        juce::String text (TRANS ("IR Length (s):"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -648,7 +657,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 210, y = 110, width = 128, height = 30;
-        juce::String text (TRANS("Filter Samplerate:"));
+        juce::String text (TRANS ("Filter Samplerate:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -660,7 +669,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 210, y = 134, width = 144, height = 30;
-        juce::String text (TRANS("Host Samplerate:"));
+        juce::String text (TRANS ("Host Samplerate:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -672,7 +681,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 110, width = 120, height = 31;
-        juce::String text (TRANS("N# IR channels:"));
+        juce::String text (TRANS ("N# IR channels:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -684,7 +693,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 71, y = 34, width = 270, height = 31;
-        juce::String text (TRANS("Load IR dataset"));
+        juce::String text (TRANS ("Load IR dataset"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -696,7 +705,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 134, width = 200, height = 30;
-        juce::String text (TRANS("N# IR positions:"));
+        juce::String text (TRANS ("N# IR positions:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -708,7 +717,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 415, y = 34, width = 417, height = 31;
-        juce::String text (TRANS("Coordinate View"));
+        juce::String text (TRANS ("Coordinate View"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -720,7 +729,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 71, y = 231, width = 270, height = 31;
-        juce::String text (TRANS("Target Listener Position"));
+        juce::String text (TRANS ("Target Listener Position"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -732,7 +741,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 193, width = 121, height = 30;
-        juce::String text (TRANS("Source Position:"));
+        juce::String text (TRANS ("Source Position:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -744,7 +753,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 280, width = 142, height = 26;
-        juce::String text (TRANS("Target Position:"));
+        juce::String text (TRANS ("Target Position:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -756,7 +765,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 143, y = 255, width = 160, height = 30;
-        juce::String text (TRANS("x           y           z"));
+        juce::String text (TRANS ("x           y           z"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -768,7 +777,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 304, width = 142, height = 26;
-        juce::String text (TRANS("Target Index:"));
+        juce::String text (TRANS ("Target Index:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -780,7 +789,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 343, y = 263, width = 91, height = 35;
-        juce::String text (TRANS("OSC Port"));
+        juce::String text (TRANS ("OSC Port"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -792,7 +801,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 221, y = 374, width = 49, height = 30;
-        juce::String text (TRANS("\\ypr[0]"));
+        juce::String text (TRANS ("\\ypr[0]"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -804,7 +813,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 261, y = 374, width = 46, height = 30;
-        juce::String text (TRANS("Pitch"));
+        juce::String text (TRANS ("Pitch"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -816,7 +825,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 317, y = 374, width = 54, height = 30;
-        juce::String text (TRANS("Roll"));
+        juce::String text (TRANS ("Roll"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -828,7 +837,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 317, y = 462, width = 63, height = 30;
-        juce::String text (TRANS("+/-"));
+        juce::String text (TRANS ("+/-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -840,7 +849,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 189, y = 462, width = 63, height = 30;
-        juce::String text (TRANS("+/-"));
+        juce::String text (TRANS ("+/-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -852,7 +861,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 253, y = 462, width = 63, height = 30;
-        juce::String text (TRANS("+/-"));
+        juce::String text (TRANS ("+/-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -864,7 +873,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 184, y = 374, width = 62, height = 30;
-        juce::String text (TRANS("Yaw"));
+        juce::String text (TRANS ("Yaw"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -876,7 +885,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 294, y = 374, width = 40, height = 30;
-        juce::String text (TRANS("\\ypr[1]"));
+        juce::String text (TRANS ("\\ypr[1]"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -888,7 +897,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 350, y = 374, width = 40, height = 30;
-        juce::String text (TRANS("\\ypr[2]"));
+        juce::String text (TRANS ("\\ypr[2]"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -900,7 +909,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 20, y = 375, width = 160, height = 30;
-        juce::String text (TRANS("Enable Rotation"));
+        juce::String text (TRANS ("Enable Rotation"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -912,7 +921,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 143, y = 167, width = 160, height = 30;
-        juce::String text (TRANS("x           y           z"));
+        juce::String text (TRANS ("x           y           z"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -924,7 +933,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 71, y = 349, width = 270, height = 31;
-        juce::String text (TRANS("Ambisonic Sound-Field Rotation"));
+        juce::String text (TRANS ("Ambisonic Sound-Field Rotation"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -936,7 +945,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 423, width = 160, height = 30;
-        juce::String text (TRANS("(Note that this rotation is"));
+        juce::String text (TRANS ("(Note that this rotation is"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -948,7 +957,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 439, width = 160, height = 30;
-        juce::String text (TRANS("only suitable if you have "));
+        juce::String text (TRANS ("only suitable if you have "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -960,7 +969,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 18, y = 455, width = 160, height = 30;
-        juce::String text (TRANS("loaded Ambisonic IRs)"));
+        juce::String text (TRANS ("loaded Ambisonic IRs)"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -1002,6 +1011,47 @@ void PluginEditor::paint (juce::Graphics& g)
             break;
     }
 
+    g.setColour(Colours::white);
+    switch (tvConvError)
+    {
+    case SAF_TVCONV_NOT_INIT: /** TVCONV no file loaded */
+        g.drawText(TRANS("SOFA file not initialized"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    case SAF_TVCONV_SOFA_LOADING: /** Loading SOFA file */
+        g.drawText(TRANS("SOFA file: loading"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    case SAF_TVCONV_SOFA_OK: /** None of the error checks failed */
+        g.drawText(TRANS("SOFA file loaded"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    case SAF_TVCONV_SOFA_ERROR_INVALID_FILE_OR_FILE_PATH:  /** Not a SOFA file, or no such file was found in the specified location */
+        g.drawText(TRANS("SOFA file not loaded: INVALID FILE OR FILE PATH"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    case SAF_TVCONV_SOFA_ERROR_DIMENSIONS_UNEXPECTED:      /** Dimensions of the SOFA data were not as expected */
+        g.drawText(TRANS("SOFA file not loaded: DIMENSIONS UNEXPECTED"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    case SAF_TVCONV_SOFA_ERROR_FORMAT_UNEXPECTED: /** The data-type of the SOFA data was not as expected */
+        g.drawText(TRANS("SOFA file not loaded: FORMAT UNEXPECTED"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    case SAF_TVCONV_SOFA_ERROR_NETCDF_IN_USE: /** NetCDF is not thread safe! */
+        g.drawText(TRANS("SOFA file not loaded: NETCDF IN USE"),
+            10, 35, 264, 11,
+            Justification::centredLeft, true);
+        break;
+    default:
+        g.drawText(TRANS("SOFA file state"), 10, 35, 264, 11, Justification::centredLeft, true);
+    }
 
     //[/UserPaint]
 }
@@ -1135,6 +1185,48 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
 
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
+#if 0
+void PluginEditor::refreshCoords()
+{
+    if (tvconv_getMaxDimension(hTVC, 0) > tvconv_getMinDimension(hTVC, 0)) {
+        SL_receiver_x->setEnabled(true);
+        SL_receiver_x->setRange(tvconv_getMinDimension(hTVC, 0),
+            tvconv_getMaxDimension(hTVC, 0),
+            0.001);
+    } else {
+        SL_receiver_x->setEnabled(false);
+    }
+    SL_receiver_x->setValue(tvconv_getTargetPosition(hTVC, 0));
+    if (tvconv_getMaxDimension(hTVC, 1) > tvconv_getMinDimension(hTVC, 1)) {
+        SL_receiver_y->setEnabled(true);
+        SL_receiver_y->setRange(tvconv_getMinDimension(hTVC, 1),
+            tvconv_getMaxDimension(hTVC, 1),
+            0.001);
+    } else {
+        SL_receiver_y->setEnabled(false);
+    }
+    SL_receiver_y->setValue(tvconv_getTargetPosition(hTVC, 1));
+    if (tvconv_getMaxDimension(hTVC, 2) > tvconv_getMinDimension(hTVC, 2)) {
+        SL_receiver_z->setEnabled(true);
+        SL_receiver_z->setRange(tvconv_getMinDimension(hTVC, 2),
+            tvconv_getMaxDimension(hTVC, 2),
+            0.001);
+    } else {
+        SL_receiver_z->setEnabled(false);
+    }
+    SL_receiver_z->setValue(tvconv_getTargetPosition(hTVC, 2));
+
+    //float sourcePosition = tvconv_getSourcePosition(hTVC, 0);
+
+    SL_source_x->setRange(tvconv_getSourcePosition(hTVC, 0), tvconv_getSourcePosition(hTVC, 0) + 1, 0.1);
+    SL_source_x->setValue(tvconv_getSourcePosition(hTVC, 0));
+    SL_source_y->setRange(tvconv_getSourcePosition(hTVC, 1), tvconv_getSourcePosition(hTVC, 1) + 1, 0.1);
+    SL_source_y->setValue(tvconv_getSourcePosition(hTVC, 1));
+    SL_source_z->setRange(tvconv_getSourcePosition(hTVC, 2), tvconv_getSourcePosition(hTVC, 2) + 1, 0.1);
+    SL_source_z->setValue(tvconv_getSourcePosition(hTVC, 2));
+}
+#endif
+
 void PluginEditor::timerCallback()
 {
     /* parameters whos values can change internally should be periodically refreshed */
@@ -1171,7 +1263,24 @@ void PluginEditor::timerCallback()
         repaint(0,0,getWidth(),32);
     }
 
-    sceneWindow->refreshSceneView();
+    tvConvError = tvconv_getSofaErrorState(hTVC);
+    repaint(136, 45, 264, 11);
+
+
+    if (refreshSceneViewWindow == true)
+    {
+        sceneWindow->refreshSceneView();
+        refreshSceneViewWindow = false;
+    }
+    else
+    {
+        refreshDecimationCounter--;
+        if (refreshDecimationCounter == 0)
+        {
+            refreshDecimationCounter = 25;
+            sceneWindow->refreshSceneView();
+        }
+    }
 
     /* check if OSC port has changed */
     if (hVst->getOscPortID() != te_oscport->getText().getIntValue())
@@ -1180,15 +1289,21 @@ void PluginEditor::timerCallback()
 
 void PluginEditor::refreshCoords()
 {
-    if (tvconv_getMaxDimension(hTVC, 0) > tvconv_getMinDimension(hTVC, 0)){
+    // Get receiver position data from convolver and update slider X
+    if (tvconv_getMaxDimension(hTVC, 0) > tvconv_getMinDimension(hTVC, 0))
+    {
         SL_receiver_x->setEnabled(true);
         SL_receiver_x->setRange(tvconv_getMinDimension(hTVC, 0),
                                 tvconv_getMaxDimension(hTVC, 0),
                                 0.001);
-    } else {
+    }
+    else
+    {
         SL_receiver_x->setEnabled(false);
     }
     SL_receiver_x->setValue(tvconv_getTargetPosition(hTVC, 0));
+
+    // Get receiver position data from convolver and update slider Y
     if (tvconv_getMaxDimension(hTVC, 1) > tvconv_getMinDimension(hTVC, 1)){
         SL_receiver_y->setEnabled(true);
         SL_receiver_y->setRange(tvconv_getMinDimension(hTVC, 1),
@@ -1198,6 +1313,8 @@ void PluginEditor::refreshCoords()
         SL_receiver_y->setEnabled(false);
     }
     SL_receiver_y->setValue(tvconv_getTargetPosition(hTVC, 1));
+
+    // Get receiver position data from convolver and update slider Z
     if (tvconv_getMaxDimension(hTVC, 2) > tvconv_getMinDimension(hTVC, 2)){
         SL_receiver_z->setEnabled(true);
         SL_receiver_z->setRange(tvconv_getMinDimension(hTVC, 2),
@@ -1208,6 +1325,9 @@ void PluginEditor::refreshCoords()
     }
     SL_receiver_z->setValue(tvconv_getTargetPosition(hTVC, 2));
 
+
+    // Get SOURCE position data from convolver and update sliders (XYZ)
+
     //float sourcePosition = tvconv_getSourcePosition(hTVC, 0);
 
     SL_source_x->setRange(tvconv_getSourcePosition(hTVC, 0), tvconv_getSourcePosition(hTVC, 0)+1, 0.1);
@@ -1216,7 +1336,30 @@ void PluginEditor::refreshCoords()
     SL_source_y->setValue(tvconv_getSourcePosition(hTVC, 1));
     SL_source_z->setRange(tvconv_getSourcePosition(hTVC, 2), tvconv_getSourcePosition(hTVC, 2)+1, 0.1);
     SL_source_z->setValue(tvconv_getSourcePosition(hTVC, 2));
+
+	// Notify the host about the room size
+	hVst->room_size_x->beginChangeGesture();
+	hVst->room_size_x->setValueNotifyingHost(tvconv_getMaxDimension(hTVC, 0) - tvconv_getMinDimension(hTVC, 0));
+	hVst->room_size_x->endChangeGesture();
+	hVst->room_size_y->beginChangeGesture();
+	hVst->room_size_y->setValueNotifyingHost(tvconv_getMaxDimension(hTVC, 1) - tvconv_getMinDimension(hTVC, 1));
+	hVst->room_size_y->endChangeGesture();
+	hVst->room_size_z->beginChangeGesture();
+	hVst->room_size_z->setValueNotifyingHost(tvconv_getMaxDimension(hTVC, 2) - tvconv_getMinDimension(hTVC, 2));
+	hVst->room_size_z->endChangeGesture();
 }
+
+
+bool PluginEditor::getRefreshSceneViewWindow()
+{
+    return this->refreshSceneViewWindow;
+}
+
+void PluginEditor::setRefreshSceneViewWindow(bool val)
+{
+    refreshSceneViewWindow = val;
+}
+
 
 //[/MiscUserCode]
 
@@ -1234,11 +1377,11 @@ BEGIN_JUCER_METADATA
                  parentClasses="public AudioProcessorEditor, public Timer, private FilenameComponentListener"
                  constructorParams="PluginProcessor* ownerFilter" variableInitialisers="AudioProcessorEditor(ownerFilter)"
                  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
-                 fixedSize="1" initialWidth="860" initialHeight="500">
+                 fixedSize="1" initialWidth="860" initialHeight="502">
   <BACKGROUND backgroundColour="ffffffff">
     <RECT pos="2 28 860 290" fill="linear: 8 32, 8 112, 0=ff19313f, 1=ff041518"
           hasStroke="0"/>
-    <RECT pos="0 316 860 186" fill="linear: 8 496, 8 416, 0=ff19313f, 1=ff041518"
+    <RECT pos="0 316 860 188" fill="linear: 8 496, 8 416, 0=ff19313f, 1=ff041518"
           hasStroke="0"/>
     <RECT pos="10 256 390 88" fill="solid: 10c7c7c7" hasStroke="1" stroke="1.1, mitered, butt"
           strokeColour="solid: 67a0a0a0"/>
@@ -1250,7 +1393,7 @@ BEGIN_JUCER_METADATA
           strokeColour="solid: 67a0a0a0"/>
     <RECT pos="183 375 218 116" fill="solid: 10c7c7c7" hasStroke="1" stroke="1.1, mitered, butt"
           strokeColour="solid: 67a0a0a0"/>
-    <RECT pos="408 58 440 434" fill="solid: 10f4f4f4" hasStroke="1" stroke="0.8, mitered, butt"
+    <RECT pos="408 58 440 430" fill="solid: 10f4f4f4" hasStroke="1" stroke="0.8, mitered, butt"
           strokeColour="solid: 67a0a0a0"/>
     <RECT pos="10 58 390 28" fill="solid: 10c7c7c7" hasStroke="1" stroke="1.1, mitered, butt"
           strokeColour="solid: 67a0a0a0"/>
@@ -1266,11 +1409,11 @@ BEGIN_JUCER_METADATA
           italic="0" justification="33" typefaceStyle="Bold"/>
     <RECT pos="0 0 860 2" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
           strokeColour="solid: ffb9b9b9"/>
-    <RECT pos="0 0 2 500" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
+    <RECT pos="0 0 2 610" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
           strokeColour="solid: ffb9b9b9"/>
-    <RECT pos="858 0 2 500" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
+    <RECT pos="858 0 2 610" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
           strokeColour="solid: ffb9b9b9"/>
-    <RECT pos="0 498 860 2" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
+    <RECT pos="0 500 860 2" fill="solid: 61a52a" hasStroke="1" stroke="2, mitered, butt"
           strokeColour="solid: ffb9b9b9"/>
     <TEXT pos="18 86 115 30" fill="solid: ffffffff" hasStroke="0" text="Host Block Size:"
           fontname="Default font" fontsize="15.0" kerning="0.0" bold="1"
@@ -1428,7 +1571,7 @@ BEGIN_JUCER_METADATA
   <TEXTEDITOR name="new text editor" id="1799da9e8cf495d6" memberName="te_oscport"
               virtualName="" explicitFocusOrder="0" pos="344 296 42 22" textcol="ffffffff"
               bkgcol="ffffff" outlinecol="6c838080" initialText="9000" multiline="0"
-              retKeyStartsLine="0" readonly="0" scrollbars="1" caret="0" popupmenu="1"/>
+              retKeyStartsLine="0" readonly="0" scrollbars="1" caret="1" popupmenu="1"/>
   <COMBOBOX name="new combo box" id="6406656f2512d83e" memberName="CBviewMode"
             virtualName="" explicitFocusOrder="0" pos="755 38 92 16" editable="0"
             layout="33" items="" textWhenNonSelected="" textWhenNoItems="(no choices)"/>

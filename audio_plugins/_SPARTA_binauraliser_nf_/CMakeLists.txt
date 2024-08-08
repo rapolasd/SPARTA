@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(sparta_binauraliser_nf VERSION 0.1.1)
+project(sparta_binauraliser_nf VERSION 0.2.0)
 message(STATUS "  ${PROJECT_NAME}")
 
 # juce helper function to create a library, which is configured as a JUCE plugin
@@ -16,8 +16,9 @@ juce_add_plugin(${PROJECT_NAME}
     COPY_PLUGIN_AFTER_BUILD     TRUE     # Where does this go in Windows + Linux?
     PLUGIN_MANUFACTURER_CODE    LEOM
     PLUGIN_CODE                 BINF
-    FORMATS                     VST      # ( VST AAX Unity VST3 AU AUv3 Standalone )
+    FORMATS                     ${BUILD_PLUGIN_FORMATS}      # ( VST AAX Unity VST3 AU AUv3 Standalone )
     PRODUCT_NAME                "${PROJECT_NAME}"
+    LV2URI                      "http://AALTO.${PROJECT_NAME}.${PROJECT_VERSION}"
 )
 
 # Generates "JuceHeader.h", and adds its path to the include paths of the target

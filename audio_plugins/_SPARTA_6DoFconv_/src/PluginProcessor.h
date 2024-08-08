@@ -12,7 +12,13 @@
 #include "tvconv.h"
 #include "rotator.h"
 #include <string.h>
-#define BUILD_VER_SUFFIX "alpha" /* String to be added before the version name on the GUI (beta, alpha etc..) */
+
+#define BUILD_VER_SUFFIX0 "alpha" /* String to be added before the version name on the GUI (beta, alpha etc..) */
+#ifndef NDEBUG
+#define BUILD_VER_SUFFIX (BUILD_VER_SUFFIX0 " (DEBUG)")
+#else
+#define BUILD_VER_SUFFIX BUILD_VER_SUFFIX0
+#endif
 #ifndef MIN
 # define MIN(a,b) (( (a) < (b) ) ? (a) : (b))
 #endif
@@ -22,25 +28,64 @@
 
 #define DEFAULT_OSC_PORT 9000
 
+#define ENABLE_DBG_OSC 0
+#if ENABLE_DBG_OSC
+#define DBG_OSC(prefix, osc_msg) JUCE_BLOCK_WITH_FORCED_SEMICOLON ( \
+    juce::String tempDbgBuf; \
+    tempDbgBuf << prefix << osc_msg.getAddressPattern().toString(); \
+    for(int i = 0; i < osc_msg.size(); i++) { \
+        OSCArgument arg = osc_msg[i]; \
+        OSCType osc_type; \
+        tempDbgBuf << " "; \
+        if(arg.isInt32()) { \
+            tempDbgBuf << arg.getInt32(); \
+        } else if(arg.isFloat32()) { \
+            tempDbgBuf << arg.getFloat32(); \
+        } else if(arg.isString()) {  \
+            tempDbgBuf << arg.getString(); \
+        } else if(arg.isBlob()) { \
+            tempDbgBuf << "<blob>"; \
+        } else if(arg.isColour()) { \
+            tempDbgBuf << "<colour>"; \
+        } else { \
+            tempDbgBuf << "<unknown>"; \
+        } \
+    } \
+    juce::Logger::outputDebugString (tempDbgBuf); \
+)
+#else
+#define DBG_OSC(prefix, osc_msg) 
+#endif
+
 enum {
     /* For the default VST GUI */
     k_receiverCoordX,
     k_receiverCoordY,
     k_receiverCoordZ,
 
-    k_NumOfParameters,
-
     k_qw,
     k_qx,
     k_qy,
-    k_qz
+    k_qz,
+
+	k_yaw,
+	k_pitch,
+	k_roll,
+
+    k_room_size_x,
+    k_room_size_y,
+    k_room_size_z,
+
+	k_param_workaround, // needed to ensure that when a parameter is set by the host, the "setParameter()" method is called
+
+	k_NumOfParameters
 };
 //==============================================================================
 /**
 */
 class PluginProcessor  : public AudioProcessor,
                          private OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
-                         public VSTCallbackHandler
+                         public VST2ClientExtensions
 {
 public:
     /* Set/Get functions */
@@ -66,6 +111,7 @@ public:
             return 1;
         return 0;
     }
+    VST2ClientExtensions* getVST2ClientExtensions() override {return this;}
 
     /* OSC */
     void oscMessageReceived(const OSCMessage& message) override;
@@ -77,7 +123,7 @@ public:
     int getOscPortID() { return osc_port_ID; }
     bool getOscPortConnected() { return osc_connected; }
     
-    
+
 private:
     void* hTVCnv;         /* tvconv handle */
     void* hRot;           /* rotator handle */
@@ -90,7 +136,6 @@ private:
     int osc_port_ID;
     bool enable_rotation;
     
-    
 /***************************************************************************\
                     JUCE Functions
 \***************************************************************************/
@@ -102,10 +147,6 @@ public:
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
-
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
@@ -140,8 +181,22 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
+	juce::AudioParameterFloat* receiver_coordinate_x;
+	juce::AudioParameterFloat* receiver_coordinate_y;
+	juce::AudioParameterFloat* receiver_coordinate_z;
+	juce::AudioParameterFloat* receiver_quaternion_w;
+	juce::AudioParameterFloat* receiver_quaternion_x;
+	juce::AudioParameterFloat* receiver_quaternion_y;
+	juce::AudioParameterFloat* receiver_quaternion_z;
+	juce::AudioParameterFloat* receiver_yaw;
+	juce::AudioParameterFloat* receiver_pitch;
+	juce::AudioParameterFloat* receiver_roll;
+	juce::AudioParameterFloat* room_size_x;
+	juce::AudioParameterFloat* room_size_y;
+	juce::AudioParameterFloat* room_size_z;
 
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
-};
+
+	};

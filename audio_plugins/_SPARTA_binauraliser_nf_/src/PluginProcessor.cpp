@@ -25,7 +25,7 @@
 
 PluginProcessor::PluginProcessor() : 
 	AudioProcessor(BusesProperties()
-		.withInput("Input", AudioChannelSet::discreteChannels(64), true)
+		.withInput("Input", AudioChannelSet::discreteChannels(MAX_NUM_CHANNELS), true)
 	    .withOutput("Output", AudioChannelSet::discreteChannels(2), true))
 {
 	binauraliserNF_create(&hBin);
@@ -55,7 +55,7 @@ PluginProcessor::~PluginProcessor()
 void PluginProcessor::oscMessageReceived(const OSCMessage& message)
 {
     /* if rotation angles are sent as an array \ypr[3] */
-    if (message.size() == 3 && message.getAddressPattern().toString().compare("ypr")) {
+    if (message.size() == 3 && message.getAddressPattern().toString().compare("/ypr")==0) {
         if (message[0].isFloat32())
             binauraliser_setYaw(hBin, message[0].getFloat32());
         if (message[1].isFloat32())
@@ -66,11 +66,11 @@ void PluginProcessor::oscMessageReceived(const OSCMessage& message)
     }
     
     /* if rotation angles are sent individually: */
-    if(message.getAddressPattern().toString().compare("yaw"))
+    if(message.getAddressPattern().toString().compare("/yaw")==0)
         binauraliser_setYaw(hBin, message[0].getFloat32());
-    else if(message.getAddressPattern().toString().compare("pitch"))
+    else if(message.getAddressPattern().toString().compare("/pitch")==0)
         binauraliser_setPitch(hBin, message[0].getFloat32());
-    else if(message.getAddressPattern().toString().compare("roll"))
+    else if(message.getAddressPattern().toString().compare("/roll")==0)
         binauraliser_setRoll(hBin, message[0].getFloat32());
 }
 
@@ -298,8 +298,8 @@ void PluginProcessor::changeProgramName (int /*index*/, const String& /*newName*
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
 	nHostBlockSize = samplesPerBlock;
-    nNumInputs =  getTotalNumInputChannels();
-    nNumOutputs = getTotalNumOutputChannels();
+    nNumInputs =  jmin(getTotalNumInputChannels(), 256);
+    nNumOutputs = jmin(getTotalNumOutputChannels(), 256);
 	nSampleRate = (int)(sampleRate + 0.5);
     
 	binauraliserNF_init(hBin, nSampleRate);
@@ -313,15 +313,15 @@ void PluginProcessor::releaseResources()
 void PluginProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
 {
     int nCurrentBlockSize = nHostBlockSize = buffer.getNumSamples();
-    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels());
-    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels());
-    float** bufferData = buffer.getArrayOfWritePointers();
-    float* pFrameData[MAX_NUM_CHANNELS];
+    nNumInputs = jmin(getTotalNumInputChannels(), buffer.getNumChannels(), 256);
+    nNumOutputs = jmin(getTotalNumOutputChannels(), buffer.getNumChannels(), 256);
+    float* const* bufferData = buffer.getArrayOfWritePointers();
+    float* pFrameData[256];
     int frameSize = binauraliser_getFrameSize();
 
     if((nCurrentBlockSize % frameSize == 0)){ /* divisible by frame size */
         for (int frame = 0; frame < nCurrentBlockSize/frameSize; frame++) {
-            for (int ch = 0; ch < buffer.getNumChannels(); ch++)
+            for (int ch = 0; ch < jmin(buffer.getNumChannels(), 256); ch++)
                 pFrameData[ch] = &bufferData[ch][frame*frameSize];
 
             /* perform processing */

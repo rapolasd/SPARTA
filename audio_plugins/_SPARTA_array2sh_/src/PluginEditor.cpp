@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.8
+  Created with Projucer version: 7.0.9
 
   ------------------------------------------------------------------------------
 
@@ -40,8 +40,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     presetCB->setEditableText (false);
     presetCB->setJustificationType (juce::Justification::centredLeft);
     presetCB->setTextWhenNothingSelected (juce::String());
-    presetCB->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
-    presetCB->addItem (TRANS("Default"), 1);
+    presetCB->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
+    presetCB->addItem (TRANS ("Default"), 1);
     presetCB->addListener (this);
 
     presetCB->setBounds (88, 64, 120, 16);
@@ -50,17 +50,17 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (arrayTypeCB.get());
     arrayTypeCB->setEditableText (false);
     arrayTypeCB->setJustificationType (juce::Justification::centredLeft);
-    arrayTypeCB->setTextWhenNothingSelected (TRANS("Spherical"));
-    arrayTypeCB->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
-    arrayTypeCB->addItem (TRANS("Spherical"), 1);
-    arrayTypeCB->addItem (TRANS("Cylindrical"), 2);
+    arrayTypeCB->setTextWhenNothingSelected (TRANS ("Spherical"));
+    arrayTypeCB->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
+    arrayTypeCB->addItem (TRANS ("Spherical"), 1);
+    arrayTypeCB->addItem (TRANS ("Cylindrical"), 2);
     arrayTypeCB->addListener (this);
 
     arrayTypeCB->setBounds (368, 378, 120, 16);
 
     QSlider.reset (new juce::Slider ("new slider"));
     addAndMakeVisible (QSlider.get());
-    QSlider->setRange (4, 64, 1);
+    QSlider->setRange (4, 128, 1);
     QSlider->setSliderStyle (juce::Slider::LinearHorizontal);
     QSlider->setTextBoxStyle (juce::Slider::TextBoxRight, false, 45, 20);
     QSlider->addListener (this);
@@ -100,8 +100,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (weightTypeCB.get());
     weightTypeCB->setEditableText (false);
     weightTypeCB->setJustificationType (juce::Justification::centredLeft);
-    weightTypeCB->setTextWhenNothingSelected (TRANS("Rigid"));
-    weightTypeCB->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    weightTypeCB->setTextWhenNothingSelected (TRANS ("Rigid"));
+    weightTypeCB->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     weightTypeCB->addListener (this);
 
     weightTypeCB->setBounds (368, 410, 120, 16);
@@ -111,7 +111,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     filterTypeCB->setEditableText (false);
     filterTypeCB->setJustificationType (juce::Justification::centredLeft);
     filterTypeCB->setTextWhenNothingSelected (juce::String());
-    filterTypeCB->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    filterTypeCB->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     filterTypeCB->addListener (this);
 
     filterTypeCB->setBounds (640, 276, 128, 16);
@@ -131,8 +131,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CHOrderingCB.get());
     CHOrderingCB->setEditableText (false);
     CHOrderingCB->setJustificationType (juce::Justification::centredLeft);
-    CHOrderingCB->setTextWhenNothingSelected (TRANS("ACN"));
-    CHOrderingCB->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CHOrderingCB->setTextWhenNothingSelected (TRANS ("ACN"));
+    CHOrderingCB->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CHOrderingCB->addSeparator();
     CHOrderingCB->addSeparator();
     CHOrderingCB->addListener (this);
@@ -143,8 +143,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (normalisationCB.get());
     normalisationCB->setEditableText (false);
     normalisationCB->setJustificationType (juce::Justification::centredLeft);
-    normalisationCB->setTextWhenNothingSelected (TRANS("N3D"));
-    normalisationCB->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    normalisationCB->setTextWhenNothingSelected (TRANS ("N3D"));
+    normalisationCB->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     normalisationCB->addSeparator();
     normalisationCB->addSeparator();
     normalisationCB->addListener (this);
@@ -171,7 +171,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     textButton.reset (new juce::TextButton ("new button"));
     addAndMakeVisible (textButton.get());
-    textButton->setButtonText (TRANS("Analyse"));
+    textButton->setButtonText (TRANS ("Analyse"));
     textButton->addListener (this);
     textButton->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff5c68a4));
 
@@ -181,18 +181,18 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (dispWindow.get());
     dispWindow->setEditableText (false);
     dispWindow->setJustificationType (juce::Justification::centredLeft);
-    dispWindow->setTextWhenNothingSelected (TRANS("Filters"));
-    dispWindow->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
-    dispWindow->addItem (TRANS("Filters"), 1);
-    dispWindow->addItem (TRANS("Corr"), 2);
-    dispWindow->addItem (TRANS("L Diff"), 3);
+    dispWindow->setTextWhenNothingSelected (TRANS ("Filters"));
+    dispWindow->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
+    dispWindow->addItem (TRANS ("Filters"), 1);
+    dispWindow->addItem (TRANS ("Corr"), 2);
+    dispWindow->addItem (TRANS ("L Diff"), 3);
     dispWindow->addListener (this);
 
     dispWindow->setBounds (721, 39, 63, 14);
 
     tb_loadJSON.reset (new juce::TextButton ("new button"));
     addAndMakeVisible (tb_loadJSON.get());
-    tb_loadJSON->setButtonText (TRANS("Import"));
+    tb_loadJSON->setButtonText (TRANS ("Import"));
     tb_loadJSON->setConnectedEdges (juce::Button::ConnectedOnRight);
     tb_loadJSON->addListener (this);
     tb_loadJSON->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff14889e));
@@ -201,7 +201,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     tb_saveJSON.reset (new juce::TextButton ("new button"));
     addAndMakeVisible (tb_saveJSON.get());
-    tb_saveJSON->setButtonText (TRANS("Export"));
+    tb_saveJSON->setButtonText (TRANS ("Export"));
     tb_saveJSON->setConnectedEdges (juce::Button::ConnectedOnLeft);
     tb_saveJSON->addListener (this);
     tb_saveJSON->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff224d97));
@@ -213,8 +213,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CBencodingOrder.get());
     CBencodingOrder->setEditableText (false);
     CBencodingOrder->setJustificationType (juce::Justification::centredLeft);
-    CBencodingOrder->setTextWhenNothingSelected (TRANS("Default"));
-    CBencodingOrder->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBencodingOrder->setTextWhenNothingSelected (TRANS ("Default"));
+    CBencodingOrder->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBencodingOrder->addListener (this);
 
     CBencodingOrder->setBounds (368, 274, 120, 20);
@@ -290,6 +290,9 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     CBencodingOrder->addItem (TRANS("5th order"), SH_ORDER_FIFTH);
     CBencodingOrder->addItem (TRANS("6th order"), SH_ORDER_SIXTH);
     CBencodingOrder->addItem (TRANS("7th order"), SH_ORDER_SEVENTH);
+    CBencodingOrder->addItem (TRANS("8th order"), SH_ORDER_EIGHTH);
+    CBencodingOrder->addItem (TRANS("9th order"), SH_ORDER_NINTH);
+    CBencodingOrder->addItem (TRANS("10th order"), SH_ORDER_TENTH);
 
     /* pass handles to data required for eq and analysis displays */
     int numFreqPoints, numCurves;
@@ -313,10 +316,10 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     /* add weight options */
     weightTypeCB->addItem (TRANS("Rigid-omni"), WEIGHT_RIGID_OMNI);
     weightTypeCB->addItem (TRANS("Rigid-cardioid"), WEIGHT_RIGID_CARD);
-    //weightTypeCB->addItem (TRANS("Rigid-dipole"), WEIGHT_RIGID_DIPOLE);
+    weightTypeCB->addItem (TRANS("Rigid-dipole"), WEIGHT_RIGID_DIPOLE);
     weightTypeCB->addItem (TRANS("Open-omni"), WEIGHT_OPEN_OMNI);
     weightTypeCB->addItem (TRANS("Open-cardioid"), WEIGHT_OPEN_CARD);
-    //weightTypeCB->addItem (TRANS("Open-dipole"), WEIGHT_OPEN_DIPOLE);
+    weightTypeCB->addItem (TRANS("Open-dipole"), WEIGHT_OPEN_DIPOLE);
     weightTypeCB->setSelectedId(array2sh_getWeightType(hA2sh), dontSendNotification);
 
     /* add channel format and norm scheme options */
@@ -327,7 +330,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     normalisationCB->addItem (TRANS("FuMa"), NORM_FUMA);
 
     /* Hide decoding orders that are unsuitable for number of sensors */
-    for(int i=1; i<=7; i++)
+    for(int i=1; i<=MAX_SH_ORDER; i++)
         CBencodingOrder->setItemEnabled(i, (i+1)*(i+1) <= array2sh_getNumSensors(hA2sh) ? true : false);
 
     /* sensor coord table */
@@ -394,21 +397,21 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
 
     /* tooltips */
     CBencodingOrder->setTooltip("Encoding order. Note that the plug-in will require at least (order+1)^2 microphone array signals as input.");
-    presetCB->setTooltip("Presets for for various microphone arrays, which appropriately configures the sensor directions and specifications.");
-    cSlider->setTooltip("Speed of sound of the medium. Air ~343 m/s, water ~1484 m/s (temperature and salinity dependent).");
-    regAmountSlider->setTooltip("Maximum gain amplification permitted. Higher-values give a wider frequency range of usable spherical harmonic components, but at the cost of increased noise.");
+    presetCB->setTooltip("Presets for various microphone arrays, which appropriately configures the sensor directions and some other specifications.");
+    cSlider->setTooltip("Speed of sound of the medium. Air ~343 m/s, water ~1484 m/s (temperature and salinity dependent though).");
+    regAmountSlider->setTooltip("Maximum gain amplification permitted. Higher-values give a wider frequency range of usable spherical harmonic components, but at the cost of increased sensor noise at lower frequencies.");
     gainSlider->setTooltip("Post-gain factor (in dB).");
-    arrayTypeCB->setTooltip("Array type. Since the plug-in relies purely on theory, only shapes which have analytical descriptions available are supported; namely, spheres or infinite cylinders.");
-    weightTypeCB->setTooltip("Array construction and sensor directivity. Either open (e.g. A-format/Octo-mic) or rigid (e.g. Eigenmike/Zylia), with cardioid or omnidirectional sensors.");
+    arrayTypeCB->setTooltip("Array type. Since the plug-in relies purely on theory, only shapes which have analytical descriptions available are supported; namely, spheres or infinitely long cylinders.");
+    weightTypeCB->setTooltip("Array construction and sensor directivity. Either open (e.g. A-format) or rigid (e.g. Eigenmike or Zylia), with usually either cardioid or omnidirectional sensors, respectively.");
     filterTypeCB->setTooltip("Encoding filter design approach. Tikhonov is generally recommended as a starting point. However, Z-style may work better for Ambisonic reproduction purposes, and it can also have max_rE weights baked into the signals at the encoding stage.");
     CHOrderingCB->setTooltip("Ambisonic channel ordering convention (Note that AmbiX: ACN/SN3D).");
     normalisationCB->setTooltip("Ambisonic normalisation scheme (Note that AmbiX: ACN/SN3D).");
     tb_loadJSON->setTooltip("Loads microphone array sensor directions from a JSON file. The JSON file format follows the same convention as the one employed by the IEM plugin suite (https://plugins.iem.at/docs/configurationfiles/).");
     tb_saveJSON->setTooltip("Saves the current microphone array sensor directions to a JSON file. The JSON file format follows the same convention as the one employed by the IEM plugin suite (https://plugins.iem.at/docs/configurationfiles/).");
-    degRadTB->setTooltip("If 'ticked', the sensor directions are given in degrees [azi, elev] convention. If not 'ticked', they are in radians.");
+    degRadTB->setTooltip("If 'ticked', the sensor directions are given in degrees [azi, elev] convention. If not 'ticked', they are in radians. Note that we follow the right-hand-rule when specifying directions in SPARTA (i.e., positive azimuths are looking left, and positive elevations are looking up)");
     textButton->setTooltip("Anlyses the performance of the currently configured microphone array, based on established objective metrics. The plug-in first simulates the microphone array and applies the current encoding matrix to it, subsequently comparing the resulting patterns with ideal spherical harmonics.");
     dispWindow->setTooltip("Switches between the different display options. \n\nFilters: order-dependent equalisation curves, which are applied to eliminate the effect of the sphere. \n\nCorr: The spatial correlation is derived by comparing the patterns of the array responses with the patterns of ideal spherical harmonics, where '1' means they are perfect, and '0' completely uncorrelated; the spatial aliasing frequency can therefore be observed for each order, as the point where the spatial correlation tends towards 0. \n\nLdiff: The level difference is the mean level difference over all directions (diffuse level difference) between the ideal and simulated components. One can observe that higher permitted amplification limits [Max Gain (dB)] will result in noisier signals; however, this will also result in a wider frequency range of useful spherical harmonic components at each order.");
-    applyDiffEQ->setTooltip("Applies diffuse-field equalisation past the theoretical spatial aliasing frequency of the currently configured microphone array. This may help reduce any 'harshness' perceived at the high frequencies after decoding.");
+    applyDiffEQ->setTooltip("Applies diffuse-field equalisation past the theoretical spatial aliasing frequency of the currently configured microphone array. This may help reduce any 'harshness' perceived at the high frequencies after decoding, since this will flatten any gain boosting happening up there.");
 
     /* Plugin description */
     pluginDescription.reset (new juce::ComboBox ("new combo box"));
@@ -417,7 +420,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     pluginDescription->setAlpha(0.0f);
     pluginDescription->setEnabled(false);
     pluginDescription->setTooltip(TRANS("This plug-in spatially encodes spherical/cylindrical array signals into spherical harmonic signals (aka: Ambisonic or B-Format signals). The plug-in utilises analytical descriptors, which ascertain the frequency and order-dependent influence that the physical properties of the array have on the plane-waves arriving at its surface. The plug-in then determines the order-dependent equalisation curves needed to be imposed onto the initial spherical harmonic signals estimate, in order to remove the influence of the array itself. However, especially for higher-orders, this generally results in a large amplification of the low frequencies (including the sensor noise at these frequencies that accompanies it); therefore, four different regularisation approaches have been integrated into the plug-in, which allow the user to make a compromise between noise amplification and transform accuracy. These target (faint lines) and regularised (solid lines) equalisation curves are depicted on the user interface.\n\n")+
-                                  TRANS("Note that this ability to balance the noise amplification with the accuracy of the spatial encoding (to better suit a given application) is very important, for example: the perceived fidelity of Ambisonic decoded audio can be rather poor if the noise amplification is set too high: which is also sound-scene dependent: think orchestra vs pop-band, and which would be more permissive of increased noise. In general, a lower amplification regularisation limit is used for Ambisonics reproduction applications, when compared to sound-field visualisation algorithms, or beamformers that employ appropriate post-filtering etc."));
+                                  TRANS("Note that this ability to balance the noise amplification with the accuracy of the spatial encoding (to better suit a given application) is very important, for example: the perceived fidelity of Ambisonic decoded audio can be rather poor if the noise amplification is set too high, which is also sound-scene dependent (since there are likely different tolerance limits for e.g. an orchestral recording vs a metal band recording...). Also, in general, a lower amplification regularisation limit is used for Ambisonics reproduction applications, when compared to sound-field visualisation algorithms, or beamformers that employ appropriate post-filtering etc."));
     addAndMakeVisible (publicationLink);
     publicationLink.setColour (HyperlinkButton::textColourId, Colours::lightblue);
     publicationLink.setBounds(getBounds().getWidth()-80, 4, 80, 12);
@@ -643,7 +646,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 20, y = 55, width = 67, height = 30;
-        juce::String text (TRANS("Presets: "));
+        juce::String text (TRANS ("Presets: "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -655,7 +658,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 20, y = 91, width = 180, height = 30;
-        juce::String text (TRANS("Number of Sensors: "));
+        juce::String text (TRANS ("Number of Sensors: "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -667,7 +670,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 20, y = 123, width = 180, height = 30;
-        juce::String text (TRANS("Array radius (mm):"));
+        juce::String text (TRANS ("Array radius (mm):"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -679,7 +682,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 20, y = 155, width = 180, height = 30;
-        juce::String text (TRANS("Baffle radius (mm):"));
+        juce::String text (TRANS ("Baffle radius (mm):"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -704,7 +707,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 240, y = 337, width = 172, height = 30;
-        juce::String text (TRANS("Speed of Sound (m/s):"));
+        juce::String text (TRANS ("Speed of Sound (m/s):"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -716,7 +719,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 240, y = 369, width = 172, height = 30;
-        juce::String text (TRANS("Array Type:"));
+        juce::String text (TRANS ("Array Type:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -728,7 +731,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 240, y = 401, width = 172, height = 30;
-        juce::String text (TRANS("Baffle-Directivity:"));
+        juce::String text (TRANS ("Baffle-Directivity:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -740,7 +743,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 520, y = 268, width = 172, height = 30;
-        juce::String text (TRANS("Filter Approach:"));
+        juce::String text (TRANS ("Filter Approach:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -752,7 +755,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 520, y = 301, width = 172, height = 30;
-        juce::String text (TRANS("Max Gain (dB):"));
+        juce::String text (TRANS ("Max Gain (dB):"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -764,7 +767,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 520, y = 369, width = 172, height = 30;
-        juce::String text (TRANS("Channel Order:"));
+        juce::String text (TRANS ("Channel Order:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -776,7 +779,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 520, y = 401, width = 172, height = 30;
-        juce::String text (TRANS("Normalisation:"));
+        juce::String text (TRANS ("Normalisation:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -788,7 +791,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 520, y = 334, width = 172, height = 30;
-        juce::String text (TRANS("Post Gain (dB):"));
+        juce::String text (TRANS ("Post Gain (dB):"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -800,7 +803,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 75, y = 193, width = 101, height = 30;
-        juce::String text (TRANS("Azi   #   Elev"));
+        juce::String text (TRANS ("Azi   #   Elev"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -834,7 +837,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 92, y = 30, width = 88, height = 30;
-        juce::String text (TRANS("Inputs"));
+        juce::String text (TRANS ("Inputs"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -846,7 +849,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 440, y = 30, width = 149, height = 30;
-        juce::String text (TRANS("Encoding Settings"));
+        juce::String text (TRANS ("Encoding Settings"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -858,7 +861,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 240, y = 268, width = 172, height = 30;
-        juce::String text (TRANS("Encoding Order:"));
+        juce::String text (TRANS ("Encoding Order:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -870,7 +873,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 16, y = 1, width = 100, height = 32;
-        juce::String text (TRANS("SPARTA|"));
+        juce::String text (TRANS ("SPARTA|"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -882,7 +885,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 92, y = 1, width = 112, height = 32;
-        juce::String text (TRANS("Array2SH"));
+        juce::String text (TRANS ("Array2SH"));
         juce::Colour fillColour = juce::Colour (0xffe9ff00);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -894,7 +897,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 240, y = 305, width = 248, height = 30;
-        juce::String text (TRANS("Enable Diffuse-EQ Past Aliasing:"));
+        juce::String text (TRANS ("Enable Diffuse-EQ Past Aliasing:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -906,7 +909,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 328, y = 65, width = 392, height = 31;
-        juce::String text (TRANS("Press the \"Analyse\" button"));
+        juce::String text (TRANS ("Press the \"Analyse\" button"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -918,7 +921,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 88, width = 477, height = 23;
-        juce::String text (TRANS("Corr: The spatial correlation is derived by comparing the patterns of the array responses with"));
+        juce::String text (TRANS ("Corr: The spatial correlation is derived by comparing the patterns of the array responses with"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -930,7 +933,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 104, width = 477, height = 23;
-        juce::String text (TRANS("the patterns of ideal spherical harmonics, where \'1\' means they are perfect, and \'0\' completely "));
+        juce::String text (TRANS ("the patterns of ideal spherical harmonics, where \'1\' means they are perfect, and \'0\' completely "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -942,7 +945,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 120, width = 477, height = 23;
-        juce::String text (TRANS("uncorrelated; the spatial aliasing frequency can therefore be observed for each order, as the "));
+        juce::String text (TRANS ("uncorrelated; the spatial aliasing frequency can therefore be observed for each order, as the "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -954,7 +957,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 160, width = 477, height = 23;
-        juce::String text (TRANS("Ldiff: The level difference is the mean level difference over all directions (diffuse level differe-"));
+        juce::String text (TRANS ("Ldiff: The level difference is the mean level difference over all directions (diffuse level differe-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -966,7 +969,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 192, width = 477, height = 23;
-        juce::String text (TRANS("amplification limits [Max Gain (dB)] will result in noisier signals; however, this will also result in "));
+        juce::String text (TRANS ("amplification limits [Max Gain (dB)] will result in noisier signals; however, this will also result in "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -978,7 +981,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 176, width = 477, height = 23;
-        juce::String text (TRANS("nce) between the ideal and simulated components. One can observe that higher permitted "));
+        juce::String text (TRANS ("nce) between the ideal and simulated components. One can observe that higher permitted "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -990,7 +993,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 136, width = 477, height = 23;
-        juce::String text (TRANS("point where the spatial correlation tends towards 0."));
+        juce::String text (TRANS ("point where the spatial correlation tends towards 0."));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -1002,7 +1005,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 291, y = 208, width = 477, height = 23;
-        juce::String text (TRANS("a wider frequency range of useful spherical harmonic components at each order."));
+        juce::String text (TRANS ("a wider frequency range of useful spherical harmonic components at each order."));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -1014,7 +1017,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 673, y = 33, width = 119, height = 25;
-        juce::String text (TRANS("Display:"));
+        juce::String text (TRANS ("Display:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -1339,6 +1342,7 @@ void PluginEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     {
         //[UserButtonCode_applyDiffEQ] -- add your button handler code here..
         array2sh_setDiffEQpastAliasing(hA2sh, (int)applyDiffEQ->getToggleState());
+        needScreenRefreshFLAG = true;
         //[/UserButtonCode_applyDiffEQ]
     }
 
@@ -1487,7 +1491,7 @@ void PluginEditor::timerCallback(int timerID)
                 removeChildComponent(&progressbar);
 
             /* Hide decoding orders that are unsuitable for the current number of sensors */
-            for(int i=1; i<=7; i++)
+            for(int i=1; i<=MAX_SH_ORDER; i++)
                 CBencodingOrder->setItemEnabled(i, (i+1)*(i+1) <= array2sh_getNumSensors(hA2sh) ? true : false);
 
             /* display warning message, if needed */
@@ -1673,7 +1677,7 @@ BEGIN_JUCER_METADATA
             textWhenNoItems="(no choices)"/>
   <SLIDER name="new slider" id="93dd93c125dcb3b3" memberName="QSlider"
           virtualName="" explicitFocusOrder="0" pos="156 97 52 20" min="4.0"
-          max="64.0" int="1.0" style="LinearHorizontal" textBoxPos="TextBoxRight"
+          max="128.0" int="1.0" style="LinearHorizontal" textBoxPos="TextBoxRight"
           textBoxEditable="1" textBoxWidth="45" textBoxHeight="20" skewFactor="1.0"
           needsCallback="1"/>
   <SLIDER name="new slider" id="f6fe97a46cc051e2" memberName="rSlider"

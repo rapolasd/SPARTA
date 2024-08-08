@@ -7,7 +7,7 @@
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
   and re-saved.
 
-  Created with Projucer version: 6.0.5
+  Created with Projucer version: 7.0.9
 
   ------------------------------------------------------------------------------
 
@@ -47,8 +47,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CBorderPreset.get());
     CBorderPreset->setEditableText (false);
     CBorderPreset->setJustificationType (juce::Justification::centredLeft);
-    CBorderPreset->setTextWhenNothingSelected (TRANS("Default"));
-    CBorderPreset->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBorderPreset->setTextWhenNothingSelected (TRANS ("Default"));
+    CBorderPreset->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBorderPreset->addListener (this);
 
     CBorderPreset->setBounds (136, 63, 104, 18);
@@ -57,8 +57,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CBchFormat.get());
     CBchFormat->setEditableText (false);
     CBchFormat->setJustificationType (juce::Justification::centredLeft);
-    CBchFormat->setTextWhenNothingSelected (TRANS("ACN"));
-    CBchFormat->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBchFormat->setTextWhenNothingSelected (TRANS ("ACN"));
+    CBchFormat->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBchFormat->addListener (this);
 
     CBchFormat->setBounds (88, 116, 72, 18);
@@ -67,8 +67,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CBnormScheme.get());
     CBnormScheme->setEditableText (false);
     CBnormScheme->setJustificationType (juce::Justification::centredLeft);
-    CBnormScheme->setTextWhenNothingSelected (TRANS("N3D"));
-    CBnormScheme->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBnormScheme->setTextWhenNothingSelected (TRANS ("N3D"));
+    CBnormScheme->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBnormScheme->addListener (this);
 
     CBnormScheme->setBounds (164, 116, 76, 18);
@@ -228,8 +228,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CBdecoderMethod.get());
     CBdecoderMethod->setEditableText (false);
     CBdecoderMethod->setJustificationType (juce::Justification::centredLeft);
-    CBdecoderMethod->setTextWhenNothingSelected (TRANS("Default"));
-    CBdecoderMethod->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBdecoderMethod->setTextWhenNothingSelected (TRANS ("Default"));
+    CBdecoderMethod->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBdecoderMethod->addListener (this);
 
     CBdecoderMethod->setBounds (88, 90, 152, 18);
@@ -252,8 +252,8 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     addAndMakeVisible (CBhrirPreProc.get());
     CBhrirPreProc->setEditableText (false);
     CBhrirPreProc->setJustificationType (juce::Justification::centredLeft);
-    CBhrirPreProc->setTextWhenNothingSelected (TRANS("Please Select"));
-    CBhrirPreProc->setTextWhenNoChoicesAvailable (TRANS("(no choices)"));
+    CBhrirPreProc->setTextWhenNothingSelected (TRANS ("Please Select"));
+    CBhrirPreProc->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     CBhrirPreProc->addListener (this);
 
     CBhrirPreProc->setBounds (520, 113, 113, 18);
@@ -289,6 +289,9 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     CBorderPreset->addItem (TRANS("5th order"), SH_ORDER_FIFTH);
     CBorderPreset->addItem (TRANS("6th order"), SH_ORDER_SIXTH);
     CBorderPreset->addItem (TRANS("7th order"), SH_ORDER_SEVENTH);
+    CBorderPreset->addItem (TRANS("8th order"), SH_ORDER_EIGHTH);
+    CBorderPreset->addItem (TRANS("9th order"), SH_ORDER_NINTH);
+    CBorderPreset->addItem (TRANS("10th order"), SH_ORDER_TENTH);
     CBdecoderMethod->addItem(TRANS("Least-Squares (LS)"), DECODING_METHOD_LS);
     CBdecoderMethod->addItem(TRANS("LS with Ambi-Diff-EQ"), DECODING_METHOD_LSDIFFEQ);
     CBdecoderMethod->addItem(TRANS("Spatial Resampling (SPR)"), DECODING_METHOD_SPR);
@@ -336,16 +339,16 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     CBnormScheme->setItemEnabled(NORM_FUMA, ambi_bin_getInputOrderPreset(hAmbi)==SH_ORDER_FIRST ? true : false);
 
     /* tooltips */
-    CBdecoderMethod->setTooltip("'Least-squares' is the simplest option, but it can give strong colourations at lower-orders; which (perhaps counter-intuitively) becomes worse as more HRIR measurements are used to compute the decoder, since more high-frequency energy is assigned to ever higher orders and lost due to the order truncation. \"Diffuse-field EQ\" applied in the spherical harmonic domain helps mitigate this problem, as does toggling on \"Apply Truncation EQ\". On the other hand, Spatial resampling (SPR), which is on the same lines as the virtual loudspeaker approach (using a subset of the HRIR measurements), will also mitigate this colouration problem as it will \"alias\" the energy of higher-order components back into the lower-order components (instead of loosing this energy to order truncation). \n\nMore perceptually-motivated decoding options, which also aim to improve the spatial performance of the decoding, are the Time-alignment (TA) or Magnitude-LS decoding options. In a nutshell, they aim to exploit the knowledge that humans are not very sensitive to interaural time differences (ITDs) at high frequencies (~1.5kHz; as described by the Haas effect); instead prioritising fitting the Ambisonic patterns to only the magnitudes of the HRTFs at these frequencies - leading to improved reproduction of the interaural level differences (ILDs). \n\nHowever! Note that this plug-in already does some pre-processing of the HRIRs before computing the binaural decoders, in particular the \"Phase Simplication\" option is our (unpublished) way of doing something similar to what the TA/MagLS decoders aim to do more explicitly. Since the interaural phase differences (IPDs) are simplified, this also has the benefit of improving the least-squares fitting of the Ambisonic patterns to the target HRIR directivities. Therefore, try disabling this option if you want to listen to the different decoders as they would have sounded in their original publication evaluations.\n\nNote also that the Time-alignment (TA) decoder is without the diffuse-covariance constraint (TAC) that was also proposed in the original paper. Instead this constraint is provided as it's own toggle button (\"Apply Cov. Constriant\") and can therefore be applied to any decoding method.");
-    TBuseDefaultHRIRs->setTooltip("If this is 'ticked', the plug-in is using the default HRIR set from the Spatial_Audio_Framework.");
+    CBdecoderMethod->setTooltip("'Least-squares' is the simplest option, but it can give strong colourations at lower-orders; which can (perhaps counter-intuitively) become worse as more HRIR measurements are used to compute the decoder, since more high-frequency energy is assigned to ever higher orders and lost due to the order truncation. \"Diffuse-field EQ\" applied in the spherical harmonic domain helps mitigate this problem, as does toggling on \"Apply Truncation EQ\". On the other hand, Spatial resampling (SPR), which is similar to what is known as the virtual loudspeaker approach (using a subset of the HRIR measurements), will also mitigate this colouration problem as it will \"alias\" the energy of higher-order components back into the lower-order components (instead of loosing this energy to order truncation). \n\nMore perceptually-motivated decoding options, which also aim to improve the spatial performance of the decoding, are the Time-alignment (TA) or Magnitude-LS decoding options. In a nutshell, they aim to exploit the knowledge that humans are not very sensitive to interaural time differences (ITDs) at high frequencies (~1.5kHz; as described by the Duplex theory); instead prioritising fitting the Ambisonic patterns to only the magnitudes of the HRTFs at these frequencies - leading to a reduction in interaural level differences (ILDs) errors. \n\nHowever! Note that this plug-in already does some pre-processing of the HRIRs before computing the binaural decoders, in particular the \"Phase Simplication\" option is linearising the phase of the HRTFs, which also helps steer the least-squares solution towards better matching the magnitude responses of the HRTFs. Therefore, try disabling this option if you want to listen to the different decoders as they would have sounded in their original publication evaluations.\n\nNote also that the Time-alignment (TA) decoder is without the diffuse-covariance constraint (TAC) that was also proposed in the original paper. Instead this constraint is provided as it's own toggle button (\"Apply Cov. Constriant\") and can therefore be applied to any decoding method.");
+    TBuseDefaultHRIRs->setTooltip("If this is 'ticked', the plug-in is using the default HRIR set from the Spatial_Audio_Framework. Otherwise, the plugin will use the HRIRs found in the provided SOFA file.");
     fileChooser.setTooltip("Optionally, a custom HRIR set may be loaded via the SOFA standard. Note that if the plug-in fails to load the specified .sofa file, it will revert to the default HRIR data.");
     CBchFormat->setTooltip("Ambisonic channel ordering convention (Note that AmbiX: ACN/SN3D).");
     CBnormScheme->setTooltip("Ambisonic normalisation scheme (Note that AmbiX: ACN/SN3D).");
     CBorderPreset->setTooltip("Decoding order. Note that the plug-in will require (order+1)^2 Ambisonic (spherical harmonic) signals as input.");
     TBmaxRE->setTooltip("Enables/Disables the max_rE weights applied to the decoding matrix. Much like with loudspeaker decoding, the spatial \"tapering\" attained by applying these maxRE weights will lead to sources becoming a bit more \"spread\", but also mitigating the problem of some source energy being routed to the opposite side of the sphere.");
-    TBdiffMatching->setTooltip("Enables/Disables the diffuse covariance constraint applied to the decoding matrix. This is the 'C' part of the 'TAC' decoder. However, in this plug-in, it is given as a separate option so it can be applied to any of the available decoding methods. \n\nNote, this is not the same as applying diffuse-field EQ on the HRIRs; this is a \"spatial\" manipulation and not a timbral one. \n\nAlso note that, while it may make recodings sound broader/wider at lower-orders, it does so at the cost of greatly damaging the spatial properties of the recording (pulling everything to the sides: almost stereo-widening); therefore, we would argue that it is not \"correct\" to enable this by default... although, it can sound pretty good in some cases.");
-    TBtruncationEQ->setTooltip("Applies an EQ that counteracts the high frequency loss induced by order truncation. This is an alternative to the \"Ambi-Diff-EQ\", but it is only suitable to apply this on the \"Least-Squares\" decoder and without the \"phase-simplification\" pre-processing applied to the HRIRs. ");
-    CBhrirPreProc->setTooltip("Pre-processing options for the HRIRs. Diffuse-field EQ is based on a weighted summation of all the HRTF magnitudes in the currently loaded set. The phase-simplification involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. Note that this phase-simplification significantly helps when computing the least-squares fitting of the spherical harmonics to the HRTFs; on the same lines as what the TA and MagLS decoding options aim to do more explicitly. Disabling the phase simplification will result in more drastic differences between the different decoding methods.");
+    TBdiffMatching->setTooltip("Enables/Disables the diffuse covariance constraint applied to the decoding matrix. This is the 'C' part of the 'TAC' decoder. However, in this plug-in, it is given as a separate option so it can be applied to any of the available decoding methods. \n\nNote, this is not the same as applying diffuse-field EQ on the HRIRs; this is more of a \"spatial\" manipulation and not a timbral one. \n\nAlso note that, while it may make recordings sound broader/wider at lower-orders, it does so at the cost of distorting the spatial properties of the recording (usually pushing energy to the sides: almost akin to stereo-widening); therefore, we believe that this effect should not be enabled by default. However, it can indeed sound good in some cases... so the option is still here.");
+    TBtruncationEQ->setTooltip("Applies an EQ that counteracts the high frequency loss induced by order truncation. This is an alternative to the \"Ambi-Diff-EQ\", but it is only suitable to apply this on the \"Least-Squares\" decoder and without the \"phase-simplification\" pre-processing applied to the HRIRs.");
+    CBhrirPreProc->setTooltip("Pre-processing options for the HRIRs. Diffuse-field EQ is based on a weighted summation of all the HRTF magnitudes in the currently loaded set (i.e., removing the common/direction-independent filtering of the HRTFs). The phase-simplification involves estimating the ITDs for all the HRIRs, removing the phase from the HRTFs, but then re-introducing the phase as IPDs per frequency-bin. Note that this phase-simplification significantly helps when computing the least-squares fitting of the spherical harmonics to the HRTFs; on the same lines as what the TA and MagLS decoding options aim to do more explicitly. Disabling the phase simplification will result in more drastic differences between the different decoding methods.");
     TBenableRot->setTooltip("Enables/Disables sound-field rotation prior to decoding.");
     s_yaw->setTooltip("Sets the 'Yaw' rotation angle (in degrees).");
     s_pitch->setTooltip("Sets the 'Pitch' rotation angle (in degrees).");
@@ -366,7 +369,7 @@ PluginEditor::PluginEditor (PluginProcessor* ownerFilter)
     pluginDescription->setBounds (0, 0, 200, 32);
     pluginDescription->setAlpha(0.0f);
     pluginDescription->setEnabled(false);
-    pluginDescription->setTooltip(TRANS("This plug-in is a linear and time-invariant binaural Ambisonic decoder, which implements a number of different decoder designs and processing \"tricks\". \n\nAs with most of the SPARTA plugins, the default settings generally represent the \"state-of-the-art\" approach; or at least a configuration that is suitable for the majority of applications. The vast number of configuration options and decoding methods offered by this plug-in are mainly intended for research and educational purposes, but may nevertheless be fun to play around with :-)\n\nNote that all of the configuration options have detailed tooltips, and more information about them may be found in the references stated in the saf_hoa module of the Spatial_Audio_Framework."));
+    pluginDescription->setTooltip(TRANS("This plug-in is a linear and time-invariant binaural Ambisonic decoder, which implements a number of different decoder designs and processing \"tricks\". \n\nAs with most of the SPARTA plugins, the default settings generally represent the \"state-of-the-art\"/recommended approach; or at least a configuration that is suitable for the majority of applications. The vast number of configuration options and decoding methods offered by this plug-in are mainly intended for research and educational purposes, but may nevertheless be fun to play around with :-)\n\nNote that all of the configuration options have detailed tooltips, and more information about them may be found in the references stated in the saf_hoa module of the Spatial_Audio_Framework."));
 
 	/* Specify screen refresh rate */
     startTimer(TIMER_GUI_RELATED, 20);
@@ -548,7 +551,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 164, y = 32, width = 149, height = 30;
-        juce::String text (TRANS("Decoding Settings"));
+        juce::String text (TRANS ("Decoding Settings"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -560,7 +563,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 520, y = 32, width = 113, height = 30;
-        juce::String text (TRANS("Output"));
+        juce::String text (TRANS ("Output"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -572,7 +575,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 451, y = 56, width = 157, height = 30;
-        juce::String text (TRANS("Use Default HRIR set:"));
+        juce::String text (TRANS ("Use Default HRIR set:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -584,7 +587,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 57, width = 141, height = 30;
-        juce::String text (TRANS("Decoding Order:"));
+        juce::String text (TRANS ("Decoding Order:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -596,7 +599,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 109, width = 132, height = 30;
-        juce::String text (TRANS("Format:"));
+        juce::String text (TRANS ("Format:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -608,7 +611,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 136, width = 133, height = 30;
-        juce::String text (TRANS("Rotation"));
+        juce::String text (TRANS ("Rotation"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -620,7 +623,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 84, width = 125, height = 30;
-        juce::String text (TRANS("Method:"));
+        juce::String text (TRANS ("Method:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -632,7 +635,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 125, y = 145, width = 63, height = 30;
-        juce::String text (TRANS("\\ypr[0]"));
+        juce::String text (TRANS ("\\ypr[0]"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -644,7 +647,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 223, y = 145, width = 63, height = 30;
-        juce::String text (TRANS("Pitch"));
+        juce::String text (TRANS ("Pitch"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -656,7 +659,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 341, y = 145, width = 63, height = 30;
-        juce::String text (TRANS("Roll"));
+        juce::String text (TRANS ("Roll"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -668,7 +671,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 355, y = 225, width = 63, height = 24;
-        juce::String text (TRANS("+/-"));
+        juce::String text (TRANS ("+/-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -680,7 +683,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 240, y = 225, width = 63, height = 27;
-        juce::String text (TRANS("+/-"));
+        juce::String text (TRANS ("+/-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -692,7 +695,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 109, y = 225, width = 63, height = 27;
-        juce::String text (TRANS("+/-"));
+        juce::String text (TRANS ("+/-"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -704,7 +707,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 93, y = 145, width = 60, height = 30;
-        juce::String text (TRANS("Yaw"));
+        juce::String text (TRANS ("Yaw"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -716,7 +719,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 261, y = 145, width = 63, height = 30;
-        juce::String text (TRANS("\\ypr[1]"));
+        juce::String text (TRANS ("\\ypr[1]"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -728,7 +731,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 373, y = 145, width = 63, height = 30;
-        juce::String text (TRANS("\\ypr[2]"));
+        juce::String text (TRANS ("\\ypr[2]"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -753,7 +756,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 452, y = 144, width = 132, height = 30;
-        juce::String text (TRANS("Num dirs:"));
+        juce::String text (TRANS ("Num dirs:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -765,7 +768,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 452, y = 168, width = 132, height = 30;
-        juce::String text (TRANS("HRIR length:"));
+        juce::String text (TRANS ("HRIR length:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -777,7 +780,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 452, y = 192, width = 132, height = 30;
-        juce::String text (TRANS("HRIR fs:"));
+        juce::String text (TRANS ("HRIR fs:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -789,7 +792,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 208, width = 63, height = 23;
-        juce::String text (TRANS("OSC port:"));
+        juce::String text (TRANS ("OSC port:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -801,7 +804,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 659, y = -15, width = 80, height = 30;
-        juce::String text (TRANS("Comp. EQ:"));
+        juce::String text (TRANS ("Comp. EQ:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -813,7 +816,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 188, width = 63, height = 23;
-        juce::String text (TRANS("R-P-Y:"));
+        juce::String text (TRANS ("R-P-Y:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -825,7 +828,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 19, y = 166, width = 61, height = 23;
-        juce::String text (TRANS("Enable:"));
+        juce::String text (TRANS ("Enable:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -837,7 +840,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 16, y = 1, width = 196, height = 32;
-        juce::String text (TRANS("SPARTA|"));
+        juce::String text (TRANS ("SPARTA|"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -849,7 +852,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 92, y = 1, width = 184, height = 32;
-        juce::String text (TRANS("AmbiBIN"));
+        juce::String text (TRANS ("AmbiBIN"));
         juce::Colour fillColour = juce::Colour (0xffdf8400);
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -861,7 +864,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 254, y = 57, width = 185, height = 30;
-        juce::String text (TRANS("Apply MaxRE Weights:"));
+        juce::String text (TRANS ("Apply MaxRE Weights:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -873,7 +876,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 254, y = 84, width = 185, height = 30;
-        juce::String text (TRANS("Diffuse Cov. Constraint:"));
+        juce::String text (TRANS ("Diffuse Cov. Constraint:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -885,7 +888,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 254, y = 109, width = 185, height = 30;
-        juce::String text (TRANS("Apply Truncation EQ: "));
+        juce::String text (TRANS ("Apply Truncation EQ: "));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -937,7 +940,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 451, y = 106, width = 83, height = 30;
-        juce::String text (TRANS("Pre-Proc:"));
+        juce::String text (TRANS ("Pre-Proc:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
@@ -949,7 +952,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
     {
         int x = 452, y = 216, width = 132, height = 30;
-        juce::String text (TRANS("DAW fs:"));
+        juce::String text (TRANS ("DAW fs:"));
         juce::Colour fillColour = juce::Colours::white;
         //[UserPaintCustomArguments] Customize the painting arguments here..
         //[/UserPaintCustomArguments]
